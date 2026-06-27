@@ -1,0 +1,1954 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CR Attendance Pro 2.0</title>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  font-size:15px;line-height:1.5;color:var(--text);background:var(--bg);
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  padding-top:env(safe-area-inset-top);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+input,select,textarea,button{font:inherit;color:inherit;outline:none;border:none;background:none}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+input,select,textarea{font-size:16px} /* prevent iOS zoom */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+
+/* ============================================================
+   CSS VARIABLES
+   ============================================================ */
+:root{
+  --bg:#F3F4F6;--card:#FFFFFF;--card-alt:#F9FAFB;--text:#111827;--muted:#6B7280;
+  --primary:#4F46E5;--primary-light:#6366F1;--primary-bg:#EEF2FF;
+  --green:#10B981;--green-bg:#ECFDF5;--green-dark:#059669;
+  --red:#EF4444;--red-bg:#FEF2F2;--red-dark:#DC2626;
+  --amber:#F59E0B;--amber-bg:#FFFBEB;
+  --border:#E5E7EB;--border-strong:#D1D5DB;
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  --shadow-glow:0 0 0 4px rgba(79, 70, 229, 0.1);
+  --radius-sm:8px;--radius:12px;--radius-lg:16px;--radius-xl:20px;
+  --header-h:56px;--nav-h:64px;
+  --tab-active:#4F46E5;
+}
+[data-theme="dark"]{
+  --bg:#0F172A;--card:#1E293B;--card-alt:#334155;--text:#F1F5F9;--muted:#94A3B8;
+  --primary:#6366F1;--primary-light:#818CF8;--primary-bg:#1E1B4B;
+  --green:#22C55E;--green-bg:#14532D;--green-dark:#16A34A;
+  --red:#EF4444;--red-bg:#7F1D1D;--red-dark:#F87171;
+  --amber:#F59E0B;--amber-bg:#78350F;
+  --border:#334155;--border-strong:#475569;
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.3);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.4);
+  --shadow-glow:0 0 0 4px rgba(99, 102, 241, 0.2);
+  --tab-active:#818CF8;
+}
+
+
+#app{max-width:600px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;position:relative}
+.app-header{
+  height:var(--header-h);background:rgba(255,255,255,0.8);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px;
+  position:sticky;top:0;z-index:100;transition: background 0.3s ease, border-color 0.3s ease;
+}
+[data-theme="dark"] .app-header{background:rgba(15,23,42,0.8)}
+.app-header .logo{font-size:18px;font-weight:800;color:var(--primary);white-space:nowrap;letter-spacing:-0.5px}
+.app-header .spacer{flex:1}
+.app-header .date-badge{font-size:12px;color:var(--muted);font-weight:700;white-space:nowrap;background:var(--card-alt);padding:4px 8px;border-radius:6px}
+.icon-btn{
+  width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;background:var(--card-alt);border:1px solid var(--border);transition:.2s;color:var(--text);
+}
+.icon-btn:active{transform:scale(.92)}
+
+
+.app-main{flex:1;padding-bottom:calc(var(--nav-h) + 16px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;
+  height:calc(var(--nav-h) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);border-top:1px solid var(--border);
+  display:flex;z-index:100;transition: background 0.3s ease, border-color 0.3s ease;
+}
+[data-theme="dark"] .bottom-nav{background:rgba(15,23,42,0.9)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);font-size:11px;font-weight:600;transition:.2s;position:relative;}
+.nav-btn svg{width:22px;height:22px;stroke-width:2.2}
+.nav-btn.active{color:var(--tab-active)}
+.nav-btn.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:32px;height:3px;border-radius:0 0 4px 4px;background:var(--tab-active);}
+
+
+.view{display:none;padding:16px;animation:fadeIn .3s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+
+.card{background:var(--card);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);border:1px solid var(--border);transition: background 0.3s ease, border-color 0.3s ease;}
+.card-title{font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.card-title .action{font-size:12px;color:var(--primary);text-transform:none;font-weight:700}
+
+
+/* Home Dashboard */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.dash-tile { background: var(--card); border-radius: var(--radius-lg); padding: 14px; border: 1px solid var(--border); box-shadow: var(--shadow); display:flex; flex-direction:column; gap:4px; }
+.dash-tile .lbl { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.dash-tile .num { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -1px; }
+.dash-tile.full { grid-column: 1/-1; }
+.dash-tile.primary .num { color: var(--primary); }
+.dash-tile.green .num { color: var(--green); }
+.dash-tile.red .num { color: var(--red); }
+.dash-tile.amber .num { color: var(--amber); }
+
+
+.defaulter-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.defaulter-chip { background: var(--red-bg); color: var(--red-dark); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; border: 1px solid var(--red); }
+
+
+/* Recent Lectures */
+.recent-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: var(--radius); background: var(--card-alt); border: 1px solid var(--border); margin-bottom: 6px; transition: .2s; cursor: pointer; }
+.recent-item:active { transform: scale(0.98); }
+.recent-item .ri-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+.recent-item .ri-info { flex: 1; min-width: 0; }
+.recent-item .ri-subject { font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-item .ri-details { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.recent-item .ri-count { font-size: 13px; font-weight: 800; color: var(--green); background: var(--green-bg); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--green); }
+
+
+/* Forms */
+.att-form{display:flex;flex-direction:column;gap:10px;margin-bottom:0}
+.form-row{display:flex;gap:8px}
+.form-field{flex:1;display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.form-field input,.form-field select{background:var(--card-alt);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:14px;font-weight:600;transition:.2s;width:100%;color:var(--text);}
+.form-field input:focus,.form-field select:focus{border-color:var(--primary);box-shadow:var(--shadow-glow);background:var(--card)}
+.form-field input::placeholder{color:var(--muted);font-weight:400}
+
+
+/* Toggle Switch */
+.switch-field { display: flex; justify-content: space-between; align-items: center; background: var(--card-alt); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); }
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--border-strong); transition: .3s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+
+.topic-wrapper{position:relative}
+.topic-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-lg);z-index:50;display:none;max-height:180px;overflow-y:auto;margin-top:2px;}
+.topic-suggestions .sug{padding:10px 12px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:1px solid var(--border)}
+.topic-suggestions .sug:last-child{border-bottom:none}
+.topic-suggestions .sug:active{background:var(--card-alt)}
+
+
+.teacher-chips-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-alt); min-height: 48px; transition: .2s; }
+.teacher-chips-container:focus-within { border-color: var(--primary); box-shadow: var(--shadow-glow); background: var(--card); }
+.teacher-chip { padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid var(--border); background: var(--card); color: var(--muted); cursor: pointer; transition: .2s; user-select: none; }
+.teacher-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); }
+.teacher-chip:active { transform: scale(0.95); }
+
+
+.existing-records{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.er-label{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.er-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--radius);background:var(--card-alt);border:1px solid var(--border);margin-bottom:6px;transition:.2s;}
+.er-item.active{border-color:var(--primary);background:var(--primary-bg)}
+.er-item.holiday { border-color: var(--amber); background: var(--amber-bg); }
+.er-item .er-info{flex:1;min-width:0}
+.er-item .er-subject{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.er-item .er-details{font-size:12px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.er-item .er-count{font-size:14px;font-weight:800;color:var(--primary);background:var(--card);padding:4px 8px;border-radius:6px;border:1px solid var(--border)}
+
+
+.attendance-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--card);border-radius:var(--radius-lg);padding:8px;border:1px solid var(--border);box-shadow:var(--shadow);}
+.mode-toggle{display:flex;background:var(--card-alt);border-radius:var(--radius);padding:3px;flex-shrink:0}
+.mode-toggle button{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;color:var(--muted);transition:.2s;display:flex;align-items:center;gap:4px}
+.mode-toggle button.active{background:var(--card);color:var(--primary);box-shadow:var(--shadow)}
+.mode-toggle button svg{width:16px;height:16px}
+.search-box{flex:1;position:relative}
+.search-box input{width:100%;background:var(--card-alt);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px 8px 34px;font-size:14px;font-weight:600;color:var(--text);}
+.search-box input:focus{border-color:var(--primary);box-shadow:var(--shadow-glow);background:var(--card)}
+.search-box .search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+
+
+.student-container.list-mode{display:flex;flex-direction:column;gap:6px;min-height:300px}
+.student-container.grid-mode{display:grid;grid-template-columns:repeat(auto-fill, minmax(52px, 1fr));gap:8px;min-height:300px}
+
+
+.att-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);transition:background .15s,border-color .15s, transform .1s;user-select:none;cursor:pointer;}
+.att-item:active{transform:scale(.98)}
+.att-item .roll{font-size:14px;font-weight:800;color:var(--muted);min-width:32px;text-align:center;font-variant-numeric:tabular-nums;background:var(--card-alt);padding:4px 6px;border-radius:6px;transition:.15s}
+.att-item .name{flex:1;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att-item .check{font-size:18px;color:var(--green);opacity:0;transition:.15s;font-weight:700}
+.att-item.present{background:var(--green-bg);border-color:var(--green);color:var(--green-dark)}
+.att-item.present .roll{background:var(--green);color:#fff}
+.att-item.present .check{opacity:1}
+
+
+.grid-mode .att-item{flex-direction:column;padding:0;aspect-ratio:1;justify-content:center;align-items:center;border:2px solid var(--border);font-size:16px;font-weight:800;border-radius:12px;}
+.grid-mode .att-item .roll{background:none;padding:0;min-width:0;font-size:16px;color:var(--text)}
+.grid-mode .att-item .name{display:none}
+.grid-mode .att-item .check{display:none}
+.grid-mode .att-item.present{border-color:var(--green);background:var(--green);color:#fff}
+.grid-mode .att-item.present .roll{color:#fff}
+
+
+.attendance-footer{position:sticky;bottom:0;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));z-index:50;display:flex;align-items:center;gap:8px;box-shadow:0 -4px 12px rgba(0,0,0,0.05);transition: background 0.3s ease, border-color 0.3s ease;}
+[data-theme="dark"] .attendance-footer{background:rgba(15,23,42,0.95)}
+.count-badge{display:flex;flex-direction:column;align-items:center;min-width:60px}
+.count-badge .num{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-1px}
+.count-badge .lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px}
+.count-badge.present .num{color:var(--green)}
+.count-badge.absent .num{color:var(--red)}
+.footer-actions{flex:1;display:flex;gap:6px;justify-content:flex-end}
+.btn-sm{padding:8px 12px;border-radius:10px;font-size:12px;font-weight:700;transition:.2s;display:flex;align-items:center;gap:4px}
+.btn-sm svg{width:14px;height:14px}
+.btn-secondary{background:var(--card-alt);color:var(--text);border:1px solid var(--border)}
+.btn-danger{background:var(--red-bg);color:var(--red-dark);border:1px solid var(--red)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-sm:active{transform:scale(.95)}
+.hidden{display:none!important}
+
+
+/* Reports & Calendar */
+.report-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.report-tab{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--card);border:1px solid var(--border);color:var(--muted);transition:.2s}
+.report-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 10px rgba(79,70,229,0.3)}
+.report-panel{display:none}
+.report-panel.active{display:block;animation:fadeIn .3s}
+
+
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-row .lbl{font-size:14px;font-weight:600;color:var(--muted)}
+.stat-row .val{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.stat-row .val.green{color:var(--green)}
+.stat-row .val.red{color:var(--red)}
+
+
+.bar-chart{display:flex;flex-direction:column;gap:10px}
+.bar-item{display:flex;align-items:center;gap:8px}
+.bar-item .bar-label{flex:0 0 100px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-item .bar-track{flex:1;height:24px;background:var(--card-alt);border-radius:8px;overflow:hidden;position:relative}
+.bar-item .bar-fill{height:100%;border-radius:8px;transition:width .4s ease;background:var(--primary);display:flex;align-items:center;justify-content:flex-end;padding-right:6px}
+.bar-item .bar-fill.green{background:var(--green)}
+.bar-item .bar-fill.amber{background:var(--amber)}
+.bar-item .bar-fill.red{background:var(--red)}
+.bar-item .bar-val{font-size:11px;font-weight:800;color:#fff}
+
+
+.student-row{display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:6px;transition:.2s;cursor:pointer;}
+.student-row:active{transform:scale(.98)}
+.student-row .sr-roll{font-size:13px;font-weight:800;color:var(--muted);min-width:32px;text-align:center;background:var(--card-alt);padding:4px 6px;border-radius:6px;font-variant-numeric:tabular-nums}
+.student-row .sr-name{flex:1;font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.student-row .sr-pct{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.student-row .sr-pct.good{color:var(--green)}
+.student-row .sr-pct.warn{color:var(--red)}
+.student-row .sr-batch{font-size:10px;font-weight:800;color:var(--muted);background:var(--card-alt);padding:4px 6px;border-radius:6px}
+.student-row.warning{border-left:4px solid var(--red)}
+
+
+/* Enhanced Calendar Styles */
+.cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.cal-header .cal-title { font-weight: 800; font-size: 16px; }
+.cal-nav-btn { background: var(--card-alt); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 8px; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin: 12px 0; }
+.calendar .cal-head { text-align: center; font-size: 10px; font-weight: 800; color: var(--muted); padding: 4px 0; }
+.calendar .cal-day { text-align: center; font-size: 11px; padding: 6px 0; border-radius: 8px; font-weight: 700; aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; transition: .2s; cursor: pointer; border: 1px solid transparent; }
+.calendar .cal-day .cal-num { font-size: 12px; font-weight: 800; }
+.calendar .cal-day .cal-mark { font-size: 10px; font-weight: 800; }
+.calendar .cal-day.present { background: var(--green-bg); color: var(--green-dark); border-color: var(--green); }
+.calendar .cal-day.absent { background: var(--red-bg); color: var(--red-dark); border-color: var(--red); }
+.calendar .cal-day.holiday { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+.calendar .cal-day.no-class { background: var(--card-alt); color: var(--muted); border-color: var(--border); }
+.calendar .cal-day.empty { opacity: .1; background: none; border: none; }
+.calendar .cal-day.today { box-shadow: 0 0 0 2px var(--primary); }
+.calendar .cal-day:active { transform: scale(0.95); }
+.cal-legend { display: flex; gap: 12px; font-size: 11px; color: var(--muted); margin-top: 12px; justify-content: center; flex-wrap: wrap; }
+.cal-legend span { display: flex; align-items: center; gap: 4px; }
+.legend-box { width: 10px; height: 10px; border-radius: 2px; }
+
+
+/* Setup & Modals */
+.setup-tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.setup-tab{padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700;white-space:nowrap;background:var(--card);border:1px solid var(--border);color:var(--muted);transition:.2s}
+.setup-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 10px rgba(79,70,229,0.3)}
+.setup-panel{display:none}
+.setup-panel.active{display:block;animation:fadeIn .3s}
+.setup-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);margin-bottom:6px}
+.setup-item .si-info{flex:1;min-width:0}
+.setup-item .si-title{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.setup-item .si-sub{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
+.setup-item .si-actions{display:flex;gap:4px}
+.setup-item .si-actions button{width:32px;height:32px;border-radius:8px;background:var(--card-alt);border:1px solid var(--border);font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:14px;border-radius:var(--radius);border:2px dashed var(--border);color:var(--primary);font-size:14px;font-weight:700;transition:.2s;background:transparent;}
+.add-btn:active{background:var(--card-alt);transform:scale(.99)}
+
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:flex-end;justify-content:center;animation:fadeIn .2s;backdrop-filter:blur(4px);}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);width:100%;max-width:600px;max-height:85dvh;overflow-y:auto;border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom));animation:slideUp .3s cubic-bezier(0.16, 1, 0.3, 1);}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:sticky;top:0;background:var(--card);z-index:10;padding-bottom:8px}
+.modal-header h2{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--card-alt);font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+
+
+.profile-header{text-align:center;margin-bottom:16px}
+.profile-header .ph-roll{font-size:48px;font-weight:900;color:var(--primary);font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.profile-header .ph-name{font-size:18px;font-weight:800;margin-top:4px}
+.profile-header .ph-batch{font-size:13px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.profile-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.profile-stat{text-align:center;background:var(--card-alt);border-radius:var(--radius);padding:12px;border:1px solid var(--border)}
+.profile-stat .ps-num{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.profile-stat .ps-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;margin-top:2px}
+
+
+.prediction-box{border-radius:var(--radius);padding:14px;margin:12px 0;font-weight:600}
+.prediction-box.safe{background:var(--green-bg);color:var(--green-dark);border:1px solid var(--green)}
+.prediction-box.danger{background:var(--red-bg);color:var(--red-dark);border:1px solid var(--red)}
+.prediction-box .pb-title{font-size:14px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.prediction-box .pb-detail{font-size:13px}
+
+
+.history-list { display: flex; flex-direction: column; gap: 6px; }
+.history-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius); background: var(--card-alt); border: 1px solid var(--border); }
+.history-item .hi-info { flex: 1; min-width: 0; }
+.history-item .hi-subject { font-size: 13px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.history-item .hi-details { font-size: 12px; color: var(--muted); font-weight: 600; }
+.history-toggle { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; min-width: 70px; text-align: center; transition: .2s; color: #fff; }
+.history-toggle.present { background: var(--green); }
+.history-toggle.absent { background: var(--red); }
+.history-toggle.holiday { background: var(--amber); }
+.history-toggle:active { transform: scale(0.95); }
+
+
+/* Global Search Modal */
+.search-modal-content { background: var(--card); width: 100%; max-width: 600px; height: 100dvh; padding: 20px; padding-top: calc(20px + env(safe-area-inset-top)); animation: slideUp .3s cubic-bezier(0.16, 1, 0.3, 1); display: flex; flex-direction: column; }
+.search-input-wrapper { position: relative; margin-bottom: 16px; }
+.search-input-wrapper input { width: 100%; background: var(--card-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px 12px 40px; font-size: 16px; font-weight: 600; color: var(--text); }
+.search-input-wrapper .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); }
+.search-results { flex: 1; overflow-y: auto; }
+.search-group { margin-bottom: 16px; }
+.search-group-title { font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; padding-left: 4px; }
+.search-result-item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: var(--radius); background: var(--card-alt); border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; transition: .2s; }
+.search-result-item:active { transform: scale(0.98); }
+.sr-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+.sr-text { flex: 1; min-width: 0; }
+.sr-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sr-subtitle { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+
+.copy-options{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.copy-opt{padding:14px;border-radius:var(--radius);border:2px solid var(--border);background:var(--card-alt);font-weight:700;text-align:left;transition:.2s;}
+.copy-opt.active{border-color:var(--primary);background:var(--primary-bg);box-shadow:var(--shadow-glow)}
+.copy-opt .co-title{font-size:14px;color:var(--text)}
+.copy-opt .co-preview{font-size:12px;color:var(--muted);margin-top:4px;font-weight:400}
+.copy-preview{background:var(--card-alt);border:1px solid var(--border);border-radius:var(--radius);padding:14px;font-size:13px;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;font-family:'Courier New', monospace;line-height:1.6;color:var(--text);}
+
+
+#toast{position:fixed;bottom:calc(var(--nav-h) + 20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:12px 24px;border-radius:24px;font-size:13px;font-weight:700;z-index:2000;opacity:0;transition:.3s cubic-bezier(0.16, 1, 0.3, 1);pointer-events:none;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:6px;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.success{background:var(--green);color:#fff}
+#toast.error{background:var(--red);color:#fff}
+
+
+#print-area{display:none}
+@media print{
+  body *{visibility:hidden}
+  #print-area,#print-area *{visibility:visible}
+  #print-area{display:block;position:absolute;left:0;top:0;width:100%;padding:20px;color:#000;background:#fff}
+  .print-page{page-break-after:always;margin-bottom:20px}
+  .print-page:last-child{page-break-after:auto}
+  .print-h1{font-size:22px;font-weight:900;margin-bottom:8px}
+  .print-h2{font-size:16px;font-weight:700;margin:16px 0 8px;border-bottom:2px solid #333;padding-bottom:4px}
+  .print-table{width:100%;border-collapse:collapse;font-size:11px}
+  .print-table th,.print-table td{border:1px solid #ccc;padding:4px 6px;text-align:left}
+  .print-table th{background:#f0f0f0;font-weight:700}
+  .print-bar{height:14px;background:#4f46e5;border-radius:3px;display:inline-block;vertical-align:middle}
+  @page{margin:1cm}
+}
+
+
+@media(min-width:768px){
+  #app{max-width:800px}
+  .dash-grid { grid-template-columns: repeat(4, 1fr); }
+  .student-container.grid-mode{grid-template-columns:repeat(10, 1fr)}
+}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .es-icon{font-size:48px;margin-bottom:8px}
+.empty-state .es-msg{font-size:14px;font-weight:600}
+.warning-badge{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:6px;margin-left:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="app-header">
+    <span class="logo">CR Attendance Pro</span>
+    <span class="spacer"></span>
+    <span class="date-badge" id="header-date"></span>
+    <button class="icon-btn" id="global-search-btn" aria-label="Search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+  </header>
+
+
+  <main class="app-main">
+    <!-- HOME VIEW -->
+    <section id="view-home" class="view active">
+      <div class="date-display" style="text-align:center;margin-bottom:16px">
+        <div style="font-size:28px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-1px" id="home-date"></div>
+        <div style="font-size:14px;color:var(--muted);font-weight:700;margin-top:2px;text-transform:uppercase;letter-spacing:1px" id="home-day"></div>
+      </div>
+      <div id="current-lecture-container"></div>
+      
+      <div class="dash-grid" id="home-dashboard"></div>
+      
+      <div class="card">
+        <div class="card-title"><span>Recent Lectures</span></div>
+        <div id="recent-lectures-list"></div>
+      </div>
+
+
+      <div class="card">
+        <div class="card-title">
+          <span>Today's Schedule</span>
+          <span class="action" id="completed-count"></span>
+        </div>
+        <div class="lecture-schedule" id="home-schedule"></div>
+      </div>
+      <div id="next-lecture-container"></div>
+    </section>
+
+
+    <!-- ATTENDANCE VIEW -->
+    <section id="view-attendance" class="view">
+      <div class="card">
+        <div class="card-title">
+          <span>Attendance Entry</span>
+          <span class="action" id="save-indicator" style="color:var(--green)">Auto-saved</span>
+        </div>
+        <div class="att-form">
+          <div class="form-row">
+            <div class="form-field" style="flex:1">
+              <label>Date</label>
+              <input type="date" id="att-date">
+            </div>
+            <div class="form-field" style="flex:0 0 auto;justify-content:flex-end">
+              <button class="btn-sm btn-primary" id="new-record-btn" style="height:42px;padding:0 16px;">+ New</button>
+            </div>
+          </div>
+          <div id="existing-records-list"></div>
+          
+          <div class="switch-field">
+            <label style="margin:0;font-size:14px;font-weight:700">Mark as Holiday</label>
+            <label class="switch">
+              <input type="checkbox" id="att-is-holiday">
+              <span class="slider"></span>
+            </label>
+          </div>
+          
+          <div id="holiday-details" class="hidden">
+            <div class="form-field">
+              <label>Holiday Type</label>
+              <select id="att-holiday-type">
+                <option value="College Holiday">College Holiday</option>
+                <option value="Festival Holiday">Festival Holiday</option>
+                <option value="National Holiday">National Holiday</option>
+                <option value="Emergency Holiday">Emergency Holiday</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+
+          <div id="standard-att-fields">
+            <div class="form-row">
+              <div class="form-field" style="flex:1">
+                <label>Subject</label>
+                <select id="att-subject"></select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Teacher(s) for this lecture</label>
+              <div id="att-teachers-chips" class="teacher-chips-container"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Batch</label>
+                <select id="att-batch">
+                  <option value="Both">Entire Class</option>
+                  <option value="A">Batch A Only</option>
+                  <option value="B">Batch B Only</option>
+                  <option value="None">No Batch Only</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label>Class Type</label>
+                <select id="att-type">
+                  <option value="Theory">Theory</option>
+                  <option value="Practical">Practical</option>
+                  <option value="Clinical">Clinical</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label>Time Slot</label>
+                <input type="text" id="att-time" placeholder="e.g., 9:00–11:00">
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Topic Covered</label>
+              <div class="topic-wrapper">
+                <input type="text" id="att-topic" placeholder="Start typing topic..." autocomplete="off">
+                <div class="topic-suggestions" id="topic-suggestions"></div>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Remarks (Optional)</label>
+              <input type="text" id="att-remarks" placeholder="Any special notes...">
+            </div>
+          </div>
+          
+          <div class="audit-info hidden" id="audit-info" style="margin-top:8px;font-size:11px;color:var(--muted);font-weight:600;display:flex;gap:12px;justify-content:center">
+            <span id="audit-created"></span>
+            <span id="audit-modified"></span>
+          </div>
+        </div>
+      </div>
+
+
+      <div id="student-marking-section">
+        <div class="attendance-toolbar">
+          <div class="mode-toggle">
+            <button class="active" data-mode="list" id="mode-list-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+              List
+            </button>
+            <button data-mode="grid" id="mode-grid-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Grid
+            </button>
+          </div>
+          <div class="search-box">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="att-search" placeholder="Search roll or name...">
+          </div>
+        </div>
+        <div class="student-container list-mode" id="student-container"></div>
+      </div>
+
+
+      <div class="attendance-footer" id="att-footer">
+        <div class="count-badge present">
+          <span class="num" id="present-count">0</span>
+          <span class="lbl">Present</span>
+        </div>
+        <div class="count-badge absent">
+          <span class="num" id="absent-count">0</span>
+          <span class="lbl">Absent</span>
+        </div>
+        <div class="footer-actions">
+          <button class="btn-sm btn-secondary" id="mark-all-btn">All</button>
+          <button class="btn-sm btn-secondary" id="reset-btn">Reset</button>
+          <button class="btn-sm btn-danger hidden" id="delete-record-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+          <button class="btn-sm btn-success" id="copy-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- REPORTS VIEW -->
+    <section id="view-reports" class="view">
+      <div class="report-tabs">
+        <button class="report-tab active" data-report="overview">Overview</button>
+        <button class="report-tab" data-report="students">Students</button>
+        <button class="report-tab" data-report="subjects">Subjects</button>
+        <button class="report-tab" data-report="batch">Batch</button>
+        <button class="report-tab" data-report="trend">Trend</button>
+      </div>
+      <div id="report-overview" class="report-panel active"></div>
+      <div id="report-students" class="report-panel"></div>
+      <div id="report-subjects" class="report-panel"></div>
+      <div id="report-batch" class="report-panel"></div>
+      <div id="report-trend" class="report-panel"></div>
+      <button class="btn-sm btn-primary" id="export-pdf-btn" style="width:100%;padding:14px;margin-top:8px;font-size:15px;justify-content:center;gap:8px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF Report
+      </button>
+    </section>
+
+
+    <!-- SETUP VIEW -->
+    <section id="view-setup" class="view">
+      <div class="setup-tabs">
+        <button class="setup-tab active" data-setup="timetable">Timetable</button>
+        <button class="setup-tab" data-setup="subjects">Subjects</button>
+        <button class="setup-tab" data-setup="students">Students</button>
+        <button class="setup-tab" data-setup="settings">Settings</button>
+      </div>
+      <div id="setup-timetable" class="setup-panel active"></div>
+      <div id="setup-subjects" class="setup-panel"></div>
+      <div id="setup-students" class="setup-panel"></div>
+      <div id="setup-settings" class="setup-panel"></div>
+    </section>
+  </main>
+
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Home</button>
+    <button class="nav-btn" data-nav="attendance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Attendance</button>
+    <button class="nav-btn" data-nav="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</button>
+    <button class="nav-btn" data-nav="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Setup</button>
+  </nav>
+</div>
+
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal-content"></div>
+</div>
+
+
+<div id="toast"></div>
+<div id="print-area"></div>
+
+
+<script>
+// ============================================================
+// CORE & DB
+// ============================================================
+const STORAGE_KEY = 'cr_attendance_pro_v2_0';
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+
+let DB = {
+  students: [], subjects: [], timetable: {}, attendance: {}, recycleBin: [], topics: [],
+  settings: { theme: 'light', className: '3rd BAMS', defaultView: 'list' }
+};
+
+
+function loadDB() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      DB.students = parsed.students || [];
+      DB.subjects = parsed.subjects || [];
+      DB.timetable = parsed.timetable || {};
+      DB.attendance = parsed.attendance || {};
+      DB.recycleBin = parsed.recycleBin || [];
+      DB.topics = parsed.topics || [];
+      DB.settings = parsed.settings || { theme: 'light', className: '3rd BAMS' };
+      if (!Array.isArray(DB.students) || DB.students.length === 0) seedData();
+      if (!Array.isArray(DB.subjects) || DB.subjects.length === 0) seedData();
+      if (Object.keys(DB.timetable).length === 0) seedTimetable();
+    } else { seedData(); }
+  } catch(e) { seedData(); }
+}
+
+
+function saveDB(silent) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+    if (!silent) showToast('✓ Saved', 'success');
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+
+function silentSave() {
+  saveDB(true);
+  const indicator = document.getElementById('save-indicator');
+  if (indicator) {
+    indicator.textContent = '✓ Saved';
+    indicator.style.color = 'var(--green)';
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(() => {
+      indicator.textContent = 'Auto-saved';
+      indicator.style.color = 'var(--primary)';
+    }, 2000);
+  }
+}
+
+
+function seedData() {
+  DB.students = generateStudents();
+  DB.subjects = generateSubjects();
+  DB.timetable = {}; DB.attendance = {}; DB.recycleBin = [];
+  DB.topics = ['Agnimandya Case Discussion','Auto Retractor Practical','Blood Pressure Practical','History Taking','General Examination'];
+  DB.settings = { theme: 'light', className: '3rd BAMS', defaultView: 'list' };
+  seedTimetable();
+  saveDB(true);
+}
+
+
+function generateStudents() {
+  const names = ['AGRAWAL AARAV','BHATT ADITI','CHAUHAN ARJUN','DESAI ANANYA','EDALBAD KARAN','FUJARI SNEHA','GANDHI PRIYA','HEGDE ROHAN','IYER DIVYA','JAIN KUNAL','KHAN AMAN','LAKHANI POOJA','MEHTA SIDDHARTH','NAIR ANJALI','OJHA RISHAB','PATEL NIKITA','QURESHI FAIZAN','RAO SHREYA','SHARMA VIKRAM','TIWARI NISHA','UPADHYAY GAURAV','VERMA SAKSHI','WAGH KARAN','XAVIER RACHEL','YADAV PRIYANKA','ZAHEER MOHAMMED','BANSAL TANISH','DESHMUKH AISHWARYA','IPE ELDHOSE','JOSEPH MARIYA'];
+  return names.map((name, i) => ({ roll: i + 1, name, batch: i < 15 ? 'A' : 'B' }));
+}
+
+
+function generateSubjects() {
+  return [
+    { id: 's1', name: 'Kayachikitsa', teachers: ['Dr Urvashi','Dr Babu'] },
+    { id: 's2', name: 'Panchakarma', teachers: ['Dr Reshma'] },
+    { id: 's3', name: 'Shalya Tantra', teachers: ['Dr Chirag','Dr Wasim'] },
+    { id: 's4', name: 'Shalakya Tantra', teachers: ['Dr Darshana'] },
+    { id: 's5', name: 'Prasuti Tantra', teachers: ['Dr Sneha'] }
+  ];
+}
+
+
+function seedTimetable() {
+  DB.timetable = {
+    'Monday': [
+      { startTime:'9:00',endTime:'11:00',subjectId:'s1',teacher:'Dr Urvashi',type:'Practical',batch:'A' },
+      { startTime:'11:00',endTime:'12:00',subjectId:'s1',teacher:'Dr Urvashi',type:'Theory',batch:'Both' },
+      { startTime:'12:00',endTime:'13:00',subjectId:'s2',teacher:'Dr Reshma',type:'Theory',batch:'Both' }
+    ],
+    'Tuesday': [
+      { startTime:'9:00',endTime:'11:00',subjectId:'s3',teacher:'Dr Chirag',type:'Practical',batch:'B' },
+      { startTime:'11:00',endTime:'12:00',subjectId:'s3',teacher:'Dr Chirag',type:'Theory',batch:'Both' }
+    ],
+    'Wednesday': [
+      { startTime:'9:00',endTime:'11:00',subjectId:'s1',teacher:'Dr Urvashi',type:'Practical',batch:'A' }
+    ]
+  };
+}
+
+
+// Utils
+function formatDate(d) { const dd = String(d.getDate()).padStart(2,'0'); const mm = String(d.getMonth()+1).padStart(2,'0'); return dd + '/' + mm + '/' + d.getFullYear(); }
+function formatDateISO(d) { const mm = String(d.getMonth()+1).padStart(2,'0'); const dd = String(d.getDate()).padStart(2,'0'); return d.getFullYear() + '-' + mm + '-' + dd; }
+function formatDateTime(ts) { const d = new Date(ts); return formatDate(d) + ' ' + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
+function parseTime(t) { const p = t.split(':'); return parseInt(p[0]) * 60 + parseInt(p[1]); }
+function getDayName(d) { return DAYS[d.getDay()]; }
+function uid() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2,5); }
+function debounce(fn, delay) { let t; return function(...args) { clearTimeout(t); t = setTimeout(() => fn.apply(this, args), delay); }; }
+function haptic() { if (navigator.vibrate) navigator.vibrate(8); }
+function showToast(msg, type) { const t = document.getElementById('toast'); t.textContent = msg; t.className = type || ''; t.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => t.classList.remove('show'), 2200); }
+function getTeachersFromRecord(rec) { if (Array.isArray(rec.teachers)) return rec.teachers; if (rec.teacher) return [rec.teacher]; return []; }
+function getStudentsForBatch(batch) { if (batch === 'Both') return DB.students.filter(s => s.batch === 'A' || s.batch === 'B'); if (batch === 'None') return DB.students.filter(s => s.batch === 'None' || !s.batch); return DB.students.filter(s => s.batch === batch); }
+function getSubject(id) { return DB.subjects.find(s => s.id === id); }
+function getSubjectName(id) { const s = getSubject(id); return s ? s.name : 'Unknown'; }
+function getTeachersForSubject(id) { const s = getSubject(id); return s ? s.teachers : []; }
+function getAllAttendanceRecords() { const all = []; Object.values(DB.attendance).forEach(d => all.push(...d)); return all.sort((a,b) => a.date.localeCompare(b.date)); }
+function getRecordsForDate(date) { return DB.attendance[date] || []; }
+function findRecordById(id) { for (const d in DB.attendance) { const f = DB.attendance[d].find(r => r.id === id); if (f) return f; } return null; }
+
+
+// State
+const AppState = {
+  currentView: 'home', currentDate: new Date(),
+  attendance: { recordId: null, date: '', subjectId: '', subjectName: '', teachers: [], topic: '', remarks: '', batch: 'Both', type: 'Theory', time: '', present: [], mode: 'list', isHoliday: false, holidayType: '' },
+  reportTab: 'overview', setupTab: 'timetable',
+  studentProfileMonthOffset: 0
+};
+
+
+function navigate(view) {
+  if (AppState.currentView === 'attendance' && view !== 'attendance') saveCurrentAttendance(true);
+  AppState.currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.nav === view));
+  if (view === 'home') renderHome();
+  if (view === 'attendance') renderAttendanceView();
+  if (view === 'reports') renderReports();
+  if (view === 'setup') renderSetup();
+  window.scrollTo(0, 0);
+}
+
+
+function openAttendanceForDate(dateStr) {
+  closeModal();
+  AppState.attendance.date = dateStr;
+  AppState.attendance.recordId = null;
+  AppState.attendance.topic = '';
+  AppState.attendance.remarks = '';
+  AppState.attendance.present = [];
+  AppState.attendance.isHoliday = false;
+  AppState.attendance.time = '';
+  
+  if (dateStr === formatDateISO(new Date())) {
+    autoDetectLecture();
+  } else {
+    if (DB.subjects.length > 0) {
+      AppState.attendance.subjectId = DB.subjects[0].id;
+      AppState.attendance.subjectName = DB.subjects[0].name;
+      AppState.attendance.teachers = DB.subjects[0].teachers.length > 0 ? [DB.subjects[0].teachers[0]] : [];
+    } else {
+      AppState.attendance.subjectId = '';
+      AppState.attendance.subjectName = '';
+      AppState.attendance.teachers = [];
+    }
+  }
+  
+  navigate('attendance');
+}
+
+
+// ============================================================
+// HOME DASHBOARD
+// ============================================================
+function renderHome() {
+  const now = AppState.currentDate;
+  const dateStr = formatDateISO(now);
+  const dayName = getDayName(now);
+
+
+  document.getElementById('header-date').textContent = formatDate(now);
+  document.getElementById('home-date').textContent = formatDate(now);
+  document.getElementById('home-day').textContent = dayName;
+
+
+  const currentLecture = detectCurrentLecture(now);
+  const container = document.getElementById('current-lecture-container');
+  if (currentLecture) {
+    container.innerHTML = `
+      <div style="background:linear-gradient(135deg,var(--primary),var(--primary-light));border-radius:var(--radius-xl);padding:20px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 20px -5px rgba(79, 70, 229, 0.3);">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.9;font-weight:700;">Current Lecture</div>
+        <div style="font-size:22px;font-weight:800;margin:4px 0 8px;">${getSubjectName(currentLecture.subjectId)}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;font-weight:600;">
+          <span>👨‍🏫 ${currentLecture.teacher}</span>
+          <span>📚 ${currentLecture.type}</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">
+          <span style="background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;">🕐 ${currentLecture.startTime}–${currentLecture.endTime}</span>
+          <span style="background:rgba(255,255,255,.2);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;">Batch ${currentLecture.batch}</span>
+        </div>
+      </div>`;
+  } else { container.innerHTML = ''; }
+
+
+  const records = getRecordsForDate(dateStr);
+  let totalPresent = 0, totalAbsent = 0;
+  records.forEach(r => {
+    if (r.isHoliday) return;
+    const students = getStudentsForBatch(r.batch);
+    totalPresent += r.present.length;
+    totalAbsent += students.length - r.present.length;
+  });
+  const totalStudents = DB.students.length;
+  const totalLectures = (DB.timetable[dayName] || []).length;
+  const completed = records.filter(r => !r.isHoliday).length;
+  const remaining = totalLectures - completed;
+  const pct = (totalPresent + totalAbsent) > 0 ? Math.round((totalPresent / (totalPresent + totalAbsent)) * 100) : 0;
+
+
+  const stats = computeStats();
+  const defaulters = DB.students.filter(s => {
+    const st = stats.studentStats[s.roll] || {percentage: 0, total: 0};
+    return st.total > 0 && st.percentage < 75;
+  });
+
+
+  document.getElementById('home-dashboard').innerHTML = `
+    <div class="dash-tile primary">
+      <span class="lbl">Lectures Today</span>
+      <span class="num">${completed} / ${totalLectures}</span>
+    </div>
+    <div class="dash-tile amber">
+      <span class="lbl">Remaining</span>
+      <span class="num">${remaining > 0 ? remaining : 0}</span>
+    </div>
+    <div class="dash-tile green">
+      <span class="lbl">Present Today</span>
+      <span class="num">${totalPresent}</span>
+    </div>
+    <div class="dash-tile red">
+      <span class="lbl">Absent Today</span>
+      <span class="num">${totalAbsent}</span>
+    </div>
+    <div class="dash-tile full" style="flex-direction:row;justify-content:space-between;align-items:center;">
+      <div>
+        <span class="lbl">Overall Attendance</span>
+        <span class="num" style="color:${pct>=75?'var(--green)':'var(--red)'}">${pct}%</span>
+      </div>
+      <div style="text-align:right;">
+        <span class="lbl">Total Students</span>
+        <span class="num">${totalStudents}</span>
+      </div>
+    </div>
+    ${defaulters.length > 0 ? `
+    <div class="dash-tile full" style="border-color:var(--red);background:var(--red-bg);">
+      <span class="lbl" style="color:var(--red-dark);">Below 75% (${defaulters.length})</span>
+      <div class="defaulter-list">
+        ${defaulters.map(d => `<span class="defaulter-chip">${d.roll}. ${d.name.split(' ')[1]}</span>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+
+
+  const recentRecords = getAllAttendanceRecords().slice(-5).reverse();
+  const recentHtml = recentRecords.length > 0 ? recentRecords.map(r => {
+    const dateDisplay = r.date.split('-').reverse().join('/');
+    const isHoliday = r.isHoliday;
+    return `
+      <div class="recent-item" data-id="${r.id}">
+        <div class="ri-icon" style="${isHoliday ? 'background:var(--amber-bg);color:var(--amber);' : ''}">${isHoliday ? '🏛️' : getSubjectName(r.subjectId).substring(0,2).toUpperCase()}</div>
+        <div class="ri-info">
+          <div class="ri-subject">${isHoliday ? r.holidayType : getSubjectName(r.subjectId)}</div>
+          <div class="ri-details">${dateDisplay} • ${r.time || 'N/A'} • ${r.batch}</div>
+        </div>
+        ${isHoliday ? '<div class="ri-count" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber)">HOLIDAY</div>' : `<div class="ri-count">${r.present.length}/${getStudentsForBatch(r.batch).length}</div>`}
+      </div>`;
+  }).join('') : '<div class="empty-state" style="padding:20px"><div class="es-msg">No recent attendance recorded.</div></div>';
+  document.getElementById('recent-lectures-list').innerHTML = recentHtml;
+  document.querySelectorAll('#recent-lectures-list .recent-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const rec = findRecordById(item.dataset.id);
+      if (rec) { loadRecordIntoForm(rec); navigate('attendance'); }
+    });
+  });
+
+
+  const dayTimetable = DB.timetable[dayName] || [];
+  document.getElementById('completed-count').textContent = `${completed}/${dayTimetable.length} done`;
+  const scheduleEl = document.getElementById('home-schedule');
+  if (dayTimetable.length === 0) {
+    scheduleEl.innerHTML = '<div class="empty-state"><div class="es-msg">No lectures scheduled</div></div>';
+  } else {
+    scheduleEl.innerHTML = dayTimetable.map(slot => {
+      const status = getLectureStatus(slot, dateStr);
+      const isCurrent = currentLecture && currentLecture.startTime === slot.startTime && currentLecture.subjectId === slot.subjectId;
+      const cls = isCurrent ? 'current' : (status === 'completed' ? 'completed' : '');
+      const statusBadge = status === 'completed' ? '<span class="status completed">Done</span>' : isCurrent ? '<span class="status current">Now</span>' : '<span class="status pending">Pending</span>';
+      return `<div class="recent-item ${cls}" data-slot='${JSON.stringify(slot)}' style="${isCurrent ? 'border-color:var(--primary);background:var(--primary-bg);' : ''}"><div class="ri-info"><div class="ri-subject">${getSubjectName(slot.subjectId)}</div><div class="ri-details">${slot.startTime} • ${slot.teacher}</div></div>${statusBadge}</div>`;
+    }).join('');
+    scheduleEl.querySelectorAll('.recent-item').forEach(item => {
+      item.addEventListener('click', () => { loadSlotIntoAttendance(JSON.parse(item.dataset.slot), dateStr); navigate('attendance'); });
+    });
+  }
+}
+
+
+function detectCurrentLecture(date) {
+  const dayName = getDayName(date);
+  const dayTimetable = DB.timetable[dayName] || [];
+  const nowMinutes = date.getHours() * 60 + date.getMinutes();
+  for (const slot of dayTimetable) {
+    const start = parseTime(slot.startTime); const end = parseTime(slot.endTime);
+    if (nowMinutes >= start && nowMinutes <= end) return { ...slot, isCurrent: true };
+  } return null;
+}
+function getLectureStatus(slot, dateStr) {
+  const records = getRecordsForDate(dateStr);
+  const hasRecord = records.some(r => r.subjectId === slot.subjectId && r.time === (slot.startTime + '–' + slot.endTime));
+  return hasRecord ? 'completed' : 'pending';
+}
+function loadSlotIntoAttendance(slot, dateStr) {
+  clearAttendanceForm();
+  AppState.attendance.date = dateStr;
+  AppState.attendance.subjectId = slot.subjectId;
+  AppState.attendance.subjectName = getSubjectName(slot.subjectId);
+  AppState.attendance.teachers = [slot.teacher];
+  AppState.attendance.type = slot.type;
+  AppState.attendance.batch = slot.batch;
+  AppState.attendance.time = slot.startTime + '–' + slot.endTime;
+  const existing = DB.attendance[dateStr]?.find(r => r.subjectId === slot.subjectId && r.time === (slot.startTime + '–' + slot.endTime));
+  if (existing) loadRecordIntoForm(existing);
+}
+
+
+// ============================================================
+// ATTENDANCE VIEW
+// ============================================================
+function renderAttendanceView() {
+  if (!AppState.attendance.subjectId && !AppState.attendance.isHoliday) autoDetectLecture();
+  document.getElementById('att-date').value = AppState.attendance.date;
+  document.getElementById('att-subject').innerHTML = DB.subjects.map(s => `<option value="${s.id}" ${s.id === AppState.attendance.subjectId ? 'selected' : ''}>${s.name}</option>`).join('');
+  renderTeacherChips();
+  document.getElementById('att-batch').value = AppState.attendance.batch;
+  document.getElementById('att-type').value = AppState.attendance.type;
+  document.getElementById('att-time').value = AppState.attendance.time;
+  document.getElementById('att-topic').value = AppState.attendance.topic;
+  document.getElementById('att-remarks').value = AppState.attendance.remarks || '';
+  document.getElementById('att-is-holiday').checked = AppState.attendance.isHoliday;
+  document.getElementById('att-holiday-type').value = AppState.attendance.holidayType || 'College Holiday';
+  toggleHolidayUI();
+  
+  document.querySelectorAll('.mode-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === AppState.attendance.mode));
+  renderExistingRecords();
+  renderStudents();
+  updateCounts();
+  updateAuditInfo();
+  document.getElementById('delete-record-btn').classList.toggle('hidden', !AppState.attendance.recordId);
+}
+
+
+function autoDetectLecture() {
+  const now = AppState.currentDate;
+  const dateStr = formatDateISO(now);
+  AppState.attendance.date = dateStr;
+  const current = detectCurrentLecture(now);
+  if (current) {
+    AppState.attendance.subjectId = current.subjectId;
+    AppState.attendance.subjectName = getSubjectName(current.subjectId);
+    AppState.attendance.teachers = [current.teacher];
+    AppState.attendance.type = current.type;
+    AppState.attendance.batch = current.batch;
+    AppState.attendance.time = current.startTime + '–' + current.endTime;
+    const existing = DB.attendance[dateStr]?.find(r => r.subjectId === current.subjectId && r.time === (current.startTime + '–' + current.endTime));
+    if (existing) loadRecordIntoForm(existing);
+  } else {
+    if (DB.subjects.length > 0) {
+      AppState.attendance.subjectId = DB.subjects[0].id;
+      AppState.attendance.subjectName = DB.subjects[0].name;
+      AppState.attendance.teachers = DB.subjects[0].teachers.length > 0 ? [DB.subjects[0].teachers[0]] : [];
+    }
+  }
+}
+
+
+function toggleHolidayUI() {
+  const isHoliday = document.getElementById('att-is-holiday').checked;
+  AppState.attendance.isHoliday = isHoliday;
+  document.getElementById('holiday-details').classList.toggle('hidden', !isHoliday);
+  document.getElementById('standard-att-fields').classList.toggle('hidden', isHoliday);
+  document.getElementById('student-marking-section').classList.toggle('hidden', isHoliday);
+  document.getElementById('att-footer').classList.toggle('hidden', isHoliday);
+  if (isHoliday) {
+    AppState.attendance.holidayType = document.getElementById('att-holiday-type').value;
+    AppState.attendance.subjectName = AppState.attendance.holidayType || 'Holiday';
+  } else {
+    AppState.attendance.subjectName = getSubjectName(AppState.attendance.subjectId);
+  }
+  saveCurrentAttendance(true);
+}
+
+
+function renderTeacherChips() {
+  const subjectId = AppState.attendance.subjectId;
+  const availableTeachers = getTeachersForSubject(subjectId);
+  const currentTeachers = AppState.attendance.teachers || [];
+  const allTeachersToShow = [...new Set([...availableTeachers, ...currentTeachers])];
+  const container = document.getElementById('att-teachers-chips');
+  if (allTeachersToShow.length === 0) {
+    container.innerHTML = '<span style="color:var(--muted);font-size:13px;">No teachers assigned.</span>';
+    return;
+  }
+  container.innerHTML = allTeachersToShow.map(t => `<div class="teacher-chip ${currentTeachers.includes(t) ? 'active' : ''}" data-teacher="${t}">${t}</div>`).join('');
+  container.querySelectorAll('.teacher-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const teacher = chip.dataset.teacher;
+      const idx = AppState.attendance.teachers.indexOf(teacher);
+      if (idx > -1) AppState.attendance.teachers.splice(idx, 1);
+      else AppState.attendance.teachers.push(teacher);
+      renderTeacherChips();
+      saveCurrentAttendance(true);
+    });
+  });
+}
+
+
+function renderExistingRecords() {
+  const container = document.getElementById('existing-records-list');
+  const records = getRecordsForDate(AppState.attendance.date);
+  if (records.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = `
+    <div class="existing-records">
+      <div class="er-label">Saved Records (Tap to edit)</div>
+      ${records.map(r => `
+        <div class="er-item ${r.id === AppState.attendance.recordId ? 'active' : ''} ${r.isHoliday ? 'holiday' : ''}" data-id="${r.id}">
+          <div class="er-info">
+            <div class="er-subject">${r.isHoliday ? r.holidayType : r.subjectName} ${r.isHoliday ? '🏛️' : ''}</div>
+            <div class="er-details">${r.time || 'N/A'} • ${r.isHoliday ? 'All Batches' : getTeachersFromRecord(r).join(', ') + ' • Batch ' + r.batch}</div>
+          </div>
+          ${r.isHoliday ? '' : `<div class="er-count">${r.present.length}/${getStudentsForBatch(r.batch).length}</div>`}
+        </div>
+      `).join('')}
+    </div>`;
+  container.querySelectorAll('.er-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const record = records.find(r => r.id === item.dataset.id);
+      if (record) loadRecordIntoForm(record);
+    });
+  });
+}
+
+
+function loadRecordIntoForm(record) {
+  AppState.attendance.recordId = record.id;
+  AppState.attendance.date = record.date;
+  AppState.attendance.subjectId = record.subjectId || '';
+  AppState.attendance.subjectName = record.subjectName;
+  AppState.attendance.teachers = getTeachersFromRecord(record);
+  AppState.attendance.topic = record.topic || '';
+  AppState.attendance.remarks = record.remarks || '';
+  AppState.attendance.batch = record.batch || 'Both';
+  AppState.attendance.type = record.type || 'Theory';
+  AppState.attendance.time = record.time || '';
+  AppState.attendance.present = [...record.present];
+  AppState.attendance.isHoliday = record.isHoliday || false;
+  AppState.attendance.holidayType = record.holidayType || 'College Holiday';
+  
+  document.getElementById('att-date').value = record.date;
+  document.getElementById('att-subject').value = record.subjectId || '';
+  renderTeacherChips();
+  document.getElementById('att-batch').value = AppState.attendance.batch;
+  document.getElementById('att-type').value = AppState.attendance.type;
+  document.getElementById('att-time').value = AppState.attendance.time;
+  document.getElementById('att-topic').value = AppState.attendance.topic;
+  document.getElementById('att-remarks').value = AppState.attendance.remarks;
+  document.getElementById('att-is-holiday').checked = AppState.attendance.isHoliday;
+  document.getElementById('att-holiday-type').value = AppState.attendance.holidayType;
+  toggleHolidayUI();
+  
+  document.getElementById('delete-record-btn').classList.remove('hidden');
+  renderStudents();
+  updateCounts();
+  updateAuditInfo();
+  renderExistingRecords();
+}
+
+
+function clearAttendanceForm() {
+  AppState.attendance.recordId = null;
+  AppState.attendance.topic = '';
+  AppState.attendance.remarks = '';
+  AppState.attendance.present = [];
+  AppState.attendance.isHoliday = false;
+  document.getElementById('att-topic').value = '';
+  document.getElementById('att-remarks').value = '';
+  document.getElementById('att-is-holiday').checked = false;
+  document.getElementById('delete-record-btn').classList.add('hidden');
+  toggleHolidayUI();
+  renderStudents();
+  updateCounts();
+  updateAuditInfo();
+  renderExistingRecords();
+}
+
+
+function renderStudents() {
+  const container = document.getElementById('student-container');
+  const students = getStudentsForBatch(AppState.attendance.batch);
+  container.className = 'student-container ' + (AppState.attendance.mode === 'grid' ? 'grid-mode' : 'list-mode');
+  if (students.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="es-msg">No students in this batch.</div></div>';
+    return;
+  }
+  const fragment = document.createDocumentFragment();
+  students.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'att-item' + (AppState.attendance.present.includes(s.roll) ? ' present' : '');
+    item.dataset.roll = s.roll;
+    item.dataset.search = (s.roll + ' ' + s.name).toLowerCase();
+    item.innerHTML = `<span class="roll">${s.roll}</span><span class="name">${s.name}</span><span class="check">✓</span>`;
+    fragment.appendChild(item);
+  });
+  container.innerHTML = '';
+  container.appendChild(fragment);
+}
+
+
+function togglePresent(roll) {
+  roll = parseInt(roll);
+  const idx = AppState.attendance.present.indexOf(roll);
+  if (idx > -1) AppState.attendance.present.splice(idx, 1);
+  else AppState.attendance.present.push(roll);
+  const el = document.querySelector(`.att-item[data-roll="${roll}"]`);
+  if (el) el.classList.toggle('present', AppState.attendance.present.includes(roll));
+  updateCounts();
+  haptic();
+  saveCurrentAttendance(true);
+  renderExistingRecords();
+}
+
+
+function updateCounts() {
+  const students = getStudentsForBatch(AppState.attendance.batch);
+  document.getElementById('present-count').textContent = AppState.attendance.present.length;
+  document.getElementById('absent-count').textContent = students.length - AppState.attendance.present.length;
+}
+
+
+function updateAuditInfo() {
+  const infoEl = document.getElementById('audit-info');
+  if (AppState.attendance.recordId) {
+    const record = findRecordById(AppState.attendance.recordId);
+    if (record) {
+      infoEl.classList.remove('hidden');
+      infoEl.style.display = 'flex';
+      document.getElementById('audit-created').innerHTML = `🛈 Created: ${formatDateTime(record.createdAt)}`;
+      document.getElementById('audit-modified').innerHTML = `✎ Modified: ${formatDateTime(record.modifiedAt)}`;
+    }
+  } else {
+    infoEl.classList.add('hidden');
+  }
+}
+
+
+function markAllPresent() {
+  const students = getStudentsForBatch(AppState.attendance.batch);
+  AppState.attendance.present = students.map(s => s.roll);
+  document.querySelectorAll('.att-item').forEach(el => el.classList.add('present'));
+  updateCounts(); haptic(); saveCurrentAttendance(true); renderExistingRecords();
+}
+
+
+function resetAttendance() {
+  AppState.attendance.present = [];
+  document.querySelectorAll('.att-item').forEach(el => el.classList.remove('present'));
+  updateCounts(); haptic(); saveCurrentAttendance(true); renderExistingRecords();
+}
+
+
+function saveCurrentAttendance(silent) {
+  if (!AppState.attendance.date) { if (!silent) showToast('Please select date', 'error'); return; }
+  
+  const newDate = AppState.attendance.date;
+  if (!DB.attendance[newDate]) DB.attendance[newDate] = [];
+  
+  let record = null; let oldDateKey = null;
+  if (AppState.attendance.recordId) {
+    for (const d in DB.attendance) {
+      const found = DB.attendance[d].find(r => r.id === AppState.attendance.recordId);
+      if (found) { record = found; oldDateKey = d; break; }
+    }
+  }
+
+
+  const isHoliday = AppState.attendance.isHoliday;
+  const topic = AppState.attendance.topic.trim();
+  if (topic && !DB.topics.includes(topic)) { DB.topics.unshift(topic); if (DB.topics.length > 50) DB.topics = DB.topics.slice(0, 50); }
+
+
+  if (record) {
+    record.date = newDate;
+    record.isHoliday = isHoliday;
+    if (isHoliday) {
+      record.holidayType = AppState.attendance.holidayType;
+      record.subjectName = AppState.attendance.holidayType;
+      record.present = [];
+    } else {
+      record.subjectId = AppState.attendance.subjectId;
+      record.subjectName = getSubjectName(AppState.attendance.subjectId);
+      record.teachers = [...AppState.attendance.teachers];
+      record.batch = AppState.attendance.batch;
+      record.type = AppState.attendance.type;
+      record.time = AppState.attendance.time || '';
+      record.present = [...AppState.attendance.present];
+      record.topic = topic;
+    }
+    record.remarks = AppState.attendance.remarks || '';
+    record.modifiedAt = Date.now();
+    if (oldDateKey !== newDate) {
+      DB.attendance[oldDateKey] = DB.attendance[oldDateKey].filter(r => r.id !== record.id);
+      DB.attendance[newDate].push(record);
+    }
+  } else {
+    const existingIdx = DB.attendance[newDate].findIndex(r => r.subjectId === AppState.attendance.subjectId && r.time === (AppState.attendance.time || '') && !r.isHoliday);
+    if (existingIdx > -1 && !isHoliday) {
+      record = DB.attendance[newDate][existingIdx];
+      record.subjectName = getSubjectName(AppState.attendance.subjectId);
+      record.teachers = [...AppState.attendance.teachers];
+      record.batch = AppState.attendance.batch;
+      record.type = AppState.attendance.type;
+      record.present = [...AppState.attendance.present];
+      record.topic = topic;
+      record.modifiedAt = Date.now();
+      AppState.attendance.recordId = record.id;
+    } else {
+      const newRecord = {
+        id: uid(), date: newDate,
+        subjectId: isHoliday ? null : AppState.attendance.subjectId,
+        subjectName: isHoliday ? AppState.attendance.holidayType : getSubjectName(AppState.attendance.subjectId),
+        teachers: isHoliday ? [] : [...AppState.attendance.teachers],
+        topic: isHoliday ? '' : topic,
+        batch: isHoliday ? 'Both' : AppState.attendance.batch,
+        type: isHoliday ? 'Holiday' : AppState.attendance.type,
+        time: AppState.attendance.time || '',
+        present: isHoliday ? [] : [...AppState.attendance.present],
+        remarks: AppState.attendance.remarks || '',
+        isHoliday: isHoliday,
+        holidayType: isHoliday ? AppState.attendance.holidayType : null,
+        createdAt: Date.now(), modifiedAt: Date.now(), history: []
+      };
+      DB.attendance[newDate].push(newRecord);
+      AppState.attendance.recordId = newRecord.id;
+    }
+  }
+  if (silent) silentSave(); else saveDB();
+  updateAuditInfo();
+  document.getElementById('delete-record-btn').classList.remove('hidden');
+}
+
+
+function deleteCurrentRecord() {
+  if (!AppState.attendance.recordId) return;
+  if (!confirm('Move this record to Recycle Bin?')) return;
+  const dateKey = AppState.attendance.date;
+  if (DB.attendance[dateKey]) {
+    const idx = DB.attendance[dateKey].findIndex(r => r.id === AppState.attendance.recordId);
+    if (idx > -1) {
+      const [deleted] = DB.attendance[dateKey].splice(idx, 1);
+      deleted._deletedAt = Date.now();
+      DB.recycleBin.push(deleted);
+      saveDB(); showToast('Moved to Recycle Bin', 'success');
+      clearAttendanceForm(); renderAttendanceView();
+    }
+  }
+}
+
+
+// Copy Modal
+function showCopyModal() {
+  saveCurrentAttendance(true);
+  if (AppState.attendance.isHoliday) { showToast('Cannot copy holiday record', 'error'); return; }
+  const students = getStudentsForBatch(AppState.attendance.batch);
+  const presentNums = [...AppState.attendance.present].sort((a,b) => a-b);
+  const absentNums = students.map(s => s.roll).filter(r => !AppState.attendance.present.includes(r)).sort((a,b) => a-b);
+  const dateDisplay = AppState.attendance.date.split('-').reverse().join('/');
+  const presentStr = presentNums.join(', ');
+  const absentStr = absentNums.join(', ');
+  const teachersStr = AppState.attendance.teachers.join(', ');
+
+
+  const fullFormat = `Date: ${dateDisplay}\nClass: ${AppState.attendance.type}\nSubject: ${getSubjectName(AppState.attendance.subjectId)}\nProfessor Name: ${teachersStr || '—'}\nTopic: ${AppState.attendance.topic || '—'}\nTime: ${AppState.attendance.time || '—'}\n\nPresent No: ${presentStr}\nAbsent No: ${absentStr}`;
+  const presentOnly = `Date: ${dateDisplay}\nSubject: ${getSubjectName(AppState.attendance.subjectId)}\nPresent No: ${presentStr}`;
+  const absentOnly = `Date: ${dateDisplay}\nSubject: ${getSubjectName(AppState.attendance.subjectId)}\nAbsent No: ${absentStr}`;
+
+
+  const formats = [
+    { id: 'full', title: 'Full Format', text: fullFormat },
+    { id: 'present', title: 'Present Only', text: presentOnly },
+    { id: 'absent', title: 'Absent Only', text: absentOnly }
+  ];
+  let activeFormat = 0;
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <div class="modal-header"><h2>📋 Copy Attendance</h2><button class="modal-close" id="modal-close-btn">✕</button></div>
+    <div class="copy-options">
+      ${formats.map((f, i) => `<button class="copy-opt ${i === 0 ? 'active' : ''}" data-idx="${i}"><div class="co-title">${f.title}</div><div class="co-preview">${f.text.substring(0, 60)}...</div></button>`).join('')}
+    </div>
+    <div class="copy-preview" id="copy-preview">${fullFormat}</div>
+    <button class="btn-sm btn-success" id="copy-action-btn" style="width:100%;padding:14px;margin-top:12px;font-size:15px;justify-content:center;gap:8px;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy to Clipboard
+    </button>`;
+  document.getElementById('modal-overlay').classList.add('active');
+  modal.querySelectorAll('.copy-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.copy-opt').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFormat = parseInt(btn.dataset.idx);
+      document.getElementById('copy-preview').textContent = formats[activeFormat].text;
+    });
+  });
+  document.getElementById('copy-action-btn').addEventListener('click', () => {
+    const text = formats[activeFormat].text;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => { showToast('✓ Copied!', 'success'); closeModal(); }).catch(() => fallbackCopy(text));
+    } else { fallbackCopy(text); }
+  });
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+}
+
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); showToast('✓ Copied!', 'success'); } catch(e) { showToast('Copy failed', 'error'); }
+  document.body.removeChild(ta); closeModal();
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('active'); }
+
+
+// ============================================================
+// REPORTS & PROFILE
+// ============================================================
+function computeStats() {
+  const allRecords = getAllAttendanceRecords();
+  const studentStats = {}; const subjectStats = {}; const teacherStats = {};
+  const batchStats = { A: {present:0,total:0}, B: {present:0,total:0}, Both: {present:0,total:0}, None: {present:0,total:0} };
+  let grandPresent = 0, grandTotal = 0;
+  DB.students.forEach(s => studentStats[s.roll] = { present:0, total:0, subjects:{}, teachers:{} });
+  DB.subjects.forEach(sub => subjectStats[sub.id] = { present:0, total:0, count:0 });
+
+
+  allRecords.forEach(rec => {
+    if (rec.isHoliday) return;
+    const batchStudents = getStudentsForBatch(rec.batch);
+    const recTeachers = getTeachersFromRecord(rec);
+    batchStudents.forEach(s => {
+      studentStats[s.roll].total++; grandTotal++;
+      if (rec.present.includes(s.roll)) { studentStats[s.roll].present++; grandPresent++; }
+      if (!studentStats[s.roll].subjects[rec.subjectId]) studentStats[s.roll].subjects[rec.subjectId] = { present:0, total:0 };
+      studentStats[s.roll].subjects[rec.subjectId].total++;
+      if (rec.present.includes(s.roll)) studentStats[s.roll].subjects[rec.subjectId].present++;
+      recTeachers.forEach(t => {
+        if (!studentStats[s.roll].teachers[t]) studentStats[s.roll].teachers[t] = { present:0, total:0 };
+        studentStats[s.roll].teachers[t].total++;
+        if (rec.present.includes(s.roll)) studentStats[s.roll].teachers[t].present++;
+      });
+    });
+    if (!subjectStats[rec.subjectId]) subjectStats[rec.subjectId] = { present:0, total:0, count:0 };
+    subjectStats[rec.subjectId].total += batchStudents.length;
+    subjectStats[rec.subjectId].present += rec.present.length;
+    subjectStats[rec.subjectId].count++;
+    if (!batchStats[rec.batch]) batchStats[rec.batch] = {present:0, total:0};
+    batchStats[rec.batch].total += batchStudents.length;
+    batchStats[rec.batch].present += rec.present.length;
+    recTeachers.forEach(t => {
+      if (!teacherStats[t]) teacherStats[t] = { present:0, total:0, count:0 };
+      teacherStats[t].total += batchStudents.length;
+      teacherStats[t].present += rec.present.length;
+      teacherStats[t].count++;
+    });
+  });
+
+
+  const classAvg = grandTotal > 0 ? (grandPresent / grandTotal) * 100 : 0;
+  Object.keys(studentStats).forEach(r => studentStats[r].percentage = studentStats[r].total > 0 ? (studentStats[r].present / studentStats[r].total) * 100 : 0);
+  Object.keys(subjectStats).forEach(id => subjectStats[id].percentage = subjectStats[id].total > 0 ? (subjectStats[id].present / subjectStats[id].total) * 100 : 0);
+  Object.keys(batchStats).forEach(b => batchStats[b].percentage = batchStats[b].total > 0 ? (batchStats[b].present / batchStats[b].total) * 100 : 0);
+  Object.keys(teacherStats).forEach(t => teacherStats[t].percentage = teacherStats[t].total > 0 ? (teacherStats[t].present / teacherStats[t].total) * 100 : 0);
+
+
+  return { studentStats, subjectStats, batchStats, teacherStats, classAvg, grandPresent, grandTotal, totalRecords: allRecords.length, allRecords };
+}
+
+
+function renderReports() {
+  const stats = computeStats();
+  const studentPcts = Object.values(stats.studentStats).filter(s => s.total > 0).map(s => s.percentage);
+  const highest = studentPcts.length > 0 ? Math.max(...studentPcts) : 0;
+  const lowest = studentPcts.length > 0 ? Math.min(...studentPcts) : 0;
+  
+  document.getElementById('report-overview').innerHTML = `
+    <div class="card">
+      <div class="card-title"><span>Class Overview</span></div>
+      <div class="stat-row"><span class="lbl">Class Average</span><span class="val ${stats.classAvg >= 75 ? 'green' : 'red'}">${stats.classAvg.toFixed(1)}%</span></div>
+      <div class="stat-row"><span class="lbl">Total Lectures</span><span class="val">${stats.totalRecords}</span></div>
+      <div class="stat-row"><span class="lbl">Highest Attendance</span><span class="val green">${highest.toFixed(1)}%</span></div>
+      <div class="stat-row"><span class="lbl">Lowest Attendance</span><span class="val ${lowest < 75 ? 'red' : ''}">${lowest.toFixed(1)}%</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>Distribution</span></div>
+      <div class="bar-chart">
+        ${renderDistributionBar('Above 75%', studentPcts.filter(p => p >= 75).length, studentPcts.length, 'green')}
+        ${renderDistributionBar('50% - 75%', studentPcts.filter(p => p >= 50 && p < 75).length, studentPcts.length, 'amber')}
+        ${renderDistributionBar('Below 50%', studentPcts.filter(p => p < 50).length, studentPcts.length, 'red')}
+      </div>
+    </div>`;
+  
+  document.getElementById('report-students').innerHTML = `
+    <div class="card">
+      <div class="card-title"><span>Student List</span></div>
+      ${DB.students.map(s => {
+        const st = stats.studentStats[s.roll] || {percentage:0};
+        const cls = st.percentage >= 75 ? 'good' : 'warn';
+        const warning = st.percentage < 75 && st.total > 0 ? 'warning' : '';
+        return `<div class="student-row ${warning}" data-roll="${s.roll}"><span class="sr-roll">${s.roll}</span><div class="sr-name">${s.name}</div><span class="sr-batch">${s.batch || 'None'}</span><span class="sr-pct ${cls}">${st.percentage.toFixed(0)}%</span></div>`;
+      }).join('')}
+    </div>`;
+  document.querySelectorAll('#report-students .student-row').forEach(r => r.addEventListener('click', () => showStudentProfile(parseInt(r.dataset.roll))));
+
+
+  document.getElementById('report-subjects').innerHTML = `
+    <div class="card">
+      <div class="card-title"><span>Subject Analysis</span></div>
+      <div class="bar-chart">${DB.subjects.map(sub => { const st = stats.subjectStats[sub.id] || {percentage:0}; const c = st.percentage >= 75 ? 'green' : st.percentage >= 50 ? 'amber' : 'red'; return `<div class="bar-item"><span class="bar-label">${sub.name}</span><div class="bar-track"><div class="bar-fill ${c}" style="width:${st.percentage}%"><span class="bar-val">${st.percentage.toFixed(0)}%</span></div></div></div>`; }).join('')}</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span>Teacher Analysis</span></div>
+      <div class="bar-chart">${Object.keys(stats.teacherStats).map(t => { const st = stats.teacherStats[t]; const c = st.percentage >= 75 ? 'green' : st.percentage >= 50 ? 'amber' : 'red'; return `<div class="bar-item"><span class="bar-label">${t}</span><div class="bar-track"><div class="bar-fill ${c}" style="width:${st.percentage}%"><span class="bar-val">${st.percentage.toFixed(0)}%</span></div></div></div>`; }).join('')}</div>
+    </div>`;
+  
+  const bA = stats.batchStats.A || {percentage:0}; const bB = stats.batchStats.B || {percentage:0};
+  document.getElementById('report-batch').innerHTML = `
+    <div class="card"><div class="card-title"><span>Batch Comparison</span></div>
+      <div class="bar-chart">
+        <div class="bar-item"><span class="bar-label">Batch A</span><div class="bar-track"><div class="bar-fill ${bA.percentage >= 75 ? 'green' : 'amber'}" style="width:${bA.percentage}%"><span class="bar-val">${bA.percentage.toFixed(0)}%</span></div></div></div>
+        <div class="bar-item"><span class="bar-label">Batch B</span><div class="bar-track"><div class="bar-fill ${bB.percentage >= 75 ? 'green' : 'amber'}" style="width:${bB.percentage}%"><span class="bar-val">${bB.percentage.toFixed(0)}%</span></div></div></div>
+      </div>
+    </div>`;
+  
+  const dates = Object.keys(DB.attendance).sort();
+  const data = dates.map(date => { const recs = DB.attendance[date].filter(r => !r.isHoliday); let p=0,t=0; recs.forEach(r => { const s = getStudentsForBatch(r.batch); t += s.length; p += r.present.length; }); return { date, rate: t > 0 ? (p/t)*100 : 0 }; }).filter(d => d.rate > 0).slice(-15);
+  document.getElementById('report-trend').innerHTML = `
+    <div class="card"><div class="card-title"><span>Attendance Trend</span></div>
+      ${data.length > 1 ? `<div style="background:var(--card-alt);border-radius:var(--radius);padding:12px;margin-top:8px">${createLineChart(data)}</div><div class="stat-row" style="margin-top:16px"><span class="lbl">Avg</span><span class="val">${(data.reduce((a,b) => a+b.rate, 0)/data.length).toFixed(1)}%</span></div>` : '<div class="empty-state"><div class="es-msg">Need more data</div></div>'}
+    </div>`;
+}
+
+
+function renderDistributionBar(label, count, total, color) {
+  const pct = total > 0 ? (count / total) * 100 : 0;
+  return `<div class="bar-item"><span class="bar-label">${label}</span><div class="bar-track"><div class="bar-fill ${color}" style="width:${pct}%"><span class="bar-val">${count}</span></div></div></div>`;
+}
+
+
+function createLineChart(data) {
+  if (data.length < 2) return '';
+  const w=320,h=160,p=30,xStep=(w-p*2)/(data.length-1),yScale=(h-p*2)/100;
+  const points = data.map((d, i) => ({ x: p + i * xStep, y: h - p - d.rate * yScale }));
+  const path = points.map((pt, i) => (i === 0 ? 'M' : 'L') + ' ' + pt.x + ' ' + pt.y).join(' ');
+  const grid = [0, 25, 50, 75, 100].map(v => { const y = h - p - v * yScale; return `<line x1="${p}" y1="${y}" x2="${w-p}" y2="${y}" stroke="var(--border)" stroke-dasharray="2"/><text x="${p-4}" y="${y+3}" text-anchor="end" font-size="8" fill="var(--muted)">${v}</text>`; }).join('');
+  const dots = points.map(pt => `<circle cx="${pt.x}" cy="${pt.y}" r="3" fill="var(--primary)"/>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet">${grid}<path d="${path}" fill="none" stroke="var(--primary)" stroke-width="2"/>${dots}</svg>`;
+}
+
+
+function showStudentProfile(roll) {
+  AppState.studentProfileMonthOffset = 0; // Reset month offset when opening profile
+  const student = DB.students.find(s => s.roll === roll);
+  if (!student) return;
+  const stats = computeStats();
+  const st = stats.studentStats[roll] || {present:0, total:0, percentage:0, subjects:{}};
+  const pct = st.percentage; const absent = st.total - st.present;
+  let prediction = '';
+  if (st.total > 0) {
+    if (pct >= 75) { const canMiss = Math.floor((st.present - 0.75 * st.total) / 0.75); prediction = `<div class="prediction-box safe"><div class="pb-title">✓ Safe Zone</div><div class="pb-detail">Can miss ${canMiss} more lecture${canMiss !== 1 ? 's' : ''}.</div></div>`; }
+    else { const needed = Math.ceil((0.75 * st.total - st.present) / 0.25); prediction = `<div class="prediction-box danger"><div class="pb-title">⚠ Below 75%</div><div class="pb-detail">Must attend next ${needed} lecture${needed !== 1 ? 's' : ''}.</div></div>`; }
+  }
+  
+  const subjectBreakdown = DB.subjects.map(sub => { const ss = st.subjects[sub.id] || {present:0,total:0}; const sPct = ss.total > 0 ? (ss.present/ss.total)*100 : 0; const c = sPct >= 75 ? 'green' : sPct >= 50 ? 'amber' : 'red'; return `<div class="bar-item"><span class="bar-label">${sub.name}</span><div class="bar-track"><div class="bar-fill ${c}" style="width:${sPct}%"><span class="bar-val">${ss.present}/${ss.total}</span></div></div></div>`; }).join('');
+  const calendarHtml = renderStudentCalendar(roll);
+  const historyHtml = renderStudentHistory(roll);
+
+
+  const modal = document.getElementById('modal-content');
+  modal.innerHTML = `
+    <div class="modal-header"><h2>Student Profile</h2><button class="modal-close" id="modal-close-btn">✕</button></div>
+    <div class="profile-header"><div class="ph-roll">${student.roll}</div><div class="ph-name">${student.name}</div><div class="ph-batch">Batch ${student.batch || 'None'}</div></div>
+    <div class="profile-stats">
+      <div class="profile-stat"><div class="ps-num" style="color:var(--green)">${st.present}</div><div class="ps-lbl">Present</div></div>
+      <div class="profile-stat"><div class="ps-num" style="color:var(--red)">${absent}</div><div class="ps-lbl">Absent</div></div>
+      <div class="profile-stat"><div class="ps-num" style="color:${pct>=75?'var(--green)':'var(--red)'}">${pct.toFixed(0)}%</div><div class="ps-lbl">Overall</div></div>
+    </div>
+    ${prediction}
+    <div style="margin:16px 0">
+      <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Attendance Calendar</div>
+      ${calendarHtml}
+    </div>
+    <div style="margin:16px 0">
+      <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Subject Breakdown</div>
+      <div class="bar-chart">${subjectBreakdown}</div>
+    </div>
+    <div style="margin:16px 0">
+      <div style="font-size:13px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:8px">History (Tap to Edit)</div>
+      ${historyHtml}
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('active');
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  
+  // Calendar Listeners
+  const prevBtn = document.getElementById('cal-prev-month');
+  const nextBtn = document.getElementById('cal-next-month');
+  if (prevBtn) prevBtn.addEventListener('click', () => { AppState.studentProfileMonthOffset--; showStudentProfile(roll); });
+  if (nextBtn) nextBtn.addEventListener('click', () => { AppState.studentProfileMonthOffset++; showStudentProfile(roll); });
+
+
+  document.querySelectorAll('.cal-day[data-date]').forEach(el => {
+    el.addEventListener('click', () => { openAttendanceForDate(el.dataset.date); });
+  });
+
+
+  modal.querySelectorAll('.history-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id; const rec = findRecordById(id); if (!rec || rec.isHoliday) return;
+      const idx = rec.present.indexOf(roll);
+      if (idx > -1) rec.present.splice(idx, 1); else rec.present.push(roll);
+      rec.modifiedAt = Date.now(); saveDB(true); showToast('✓ Updated', 'success'); showStudentProfile(roll);
+      if (AppState.currentView === 'reports') renderReports();
+    });
+  });
+}
+
+
+function renderStudentCalendar(roll) {
+  const today = new Date();
+  const offset = AppState.studentProfileMonthOffset || 0;
+  const viewDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDayOfWeek = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+
+
+  let html = '<div class="cal-header">';
+  html += `<div class="cal-nav-btn" id="cal-prev-month">‹</div>`;
+  html += `<div class="cal-title">${viewDate.toLocaleString('default', { month: 'long' })} ${year}</div>`;
+  html += `<div class="cal-nav-btn" id="cal-next-month">›</div>`;
+  html += '</div>';
+
+
+  html += '<div class="calendar">';
+  const dayHeaders = ['S','M','T','W','T','F','S'];
+  dayHeaders.forEach(h => html += `<div class="cal-head">${h}</div>`);
+
+
+  for (let i = 0; i < startDayOfWeek; i++) html += '<div class="cal-day empty"></div>';
+
+
+  let presentDays = 0, absentDays = 0, holidayDays = 0;
+
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month, d);
+    const dateStr = formatDateISO(dateObj);
+    const records = DB.attendance[dateStr] || [];
+    
+    let status = 'no-class';
+    const isToday = dateStr === formatDateISO(today);
+    
+    const relevantRecords = records.filter(r => {
+      if (r.isHoliday) return true;
+      const students = getStudentsForBatch(r.batch);
+      return students.some(s => s.roll === roll);
+    });
+
+
+    if (relevantRecords.length > 0) {
+      const hasHoliday = relevantRecords.some(r => r.isHoliday);
+      if (hasHoliday) {
+        status = 'holiday';
+        holidayDays++;
+      } else {
+        const allPresent = relevantRecords.every(r => r.present.includes(roll));
+        if (allPresent) { status = 'present'; presentDays++; }
+        else { status = 'absent'; absentDays++; }
+      }
+    }
+
+
+    const mark = status === 'present' ? '✅' : status === 'absent' ? '❌' : status === 'holiday' ? '🎉' : '📚';
+    
+    let classes = `cal-day ${status}`;
+    if (isToday) classes += ' today';
+    
+    html += `<div class="${classes}" data-date="${dateStr}"><span class="cal-num">${d}</span><span class="cal-mark">${mark}</span></div>`;
+  }
+  html += '</div>';
+
+
+  html += '<div class="cal-legend">';
+  html += '<span><div class="legend-box" style="background:var(--green-bg);border:1px solid var(--green)"></div>Present ✅</span>';
+  html += '<span><div class="legend-box" style="background:var(--red-bg);border:1px solid var(--red)"></div>Absent ❌</span>';
+  html += '<span><div class="legend-box" style="background:var(--amber-bg);border:1px solid var(--amber)"></div>Holiday 🎉</span>';
+  html += '<span><div class="legend-box" style="background:var(--card-alt);border:1px solid var(--border)"></div>No Lecture 📚</span>';
+  html += '</div>';
+
+
+  const totalMarked = presentDays + absentDays;
+  const pct = totalMarked > 0 ? Math.round((presentDays / totalMarked) * 100) : 0;
+  html += `<div class="card" style="margin-top:12px;padding:12px;">
+    <div class="stat-row"><span class="lbl">Present Days</span><span class="val green">${presentDays}</span></div>
+    <div class="stat-row"><span class="lbl">Absent Days</span><span class="val red">${absentDays}</span></div>
+    <div class="stat-row"><span class="lbl">Holidays</span><span class="val" style="color:var(--amber)">${holidayDays}</span></div>
+    <div class="stat-row"><span class="lbl">Attendance %</span><span class="val" style="color:${pct>=75?'var(--green)':'var(--red)'}">${pct}%</span></div>
+  </div>`;
+
+
+  return html;
+}
+
+
+function renderStudentHistory(roll) {
+  const records = getAllAttendanceRecords().filter(r => {
+    if (r.isHoliday) return false;
+    const s = getStudentsForBatch(r.batch); return s.some(x => x.roll === roll);
+  }).sort((a,b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time)).slice(0, 15);
+  if (records.length === 0) return '<div class="empty-state"><div class="es-msg">No history</div></div>';
+  let html = '<div class="history-list">';
+  records.forEach(r => {
+    const isP = r.present.includes(roll);
+    const c = isP ? 'present' : 'absent'; const t = isP ? 'Present' : 'Absent';
+    const dD = r.date.split('-').reverse().join('/');
+    html += `<div class="history-item"><div class="hi-info"><div class="hi-subject">${r.subjectName} - ${r.time}</div><div class="hi-details">${dD} • ${r.type}</div></div><button class="history-toggle ${c}" data-id="${r.id}">${t}</button></div>`;
+  });
+  return html + '</div>';
+}
+
+
+// ============================================================
+// SETUP
+// ============================================================
+function renderSetup() {
+  if (AppState.setupTab === 'timetable') renderTimetableSetup();
+  if (AppState.setupTab === 'subjects') renderSubjectsSetup();
+  if (AppState.setupTab === 'students') renderStudentsSetup();
+  if (AppState.setupTab === 'settings') renderSettingsSetup();
+}
+
+
+function renderTimetableSetup() {
+  const c = document.getElementById('setup-timetable');
+  const dS = c.querySelector('#tt-day-select')?.value || 'Monday';
+  const s = DB.timetable[dS] || [];
+  c.innerHTML = `<div class="card"><div class="card-title"><span>Timetable Editor</span></div>
+    <div class="form-field" style="margin-bottom:12px"><label>Select Day</label><select id="tt-day-select">${DAYS.filter(d => d !== 'Sunday').map(d => `<option value="${d}" ${d === dS ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+    <div id="tt-slots">${s.map((slot, i) => renderTimetableSlot(slot, i)).join('')}</div>
+    <button class="add-btn" id="tt-add-slot">+ Add Time Slot</button></div>`;
+  document.getElementById('tt-day-select').addEventListener('change', renderTimetableSetup);
+  document.getElementById('tt-add-slot').addEventListener('click', () => { if (!DB.timetable[dS]) DB.timetable[dS] = []; DB.timetable[dS].push({ startTime:'9:00',endTime:'10:00',subjectId:DB.subjects[0]?.id||'',teacher:'',type:'Theory',batch:'Both'}); saveDB(true); renderTimetableSetup(); });
+  c.querySelectorAll('.tt-field').forEach(f => f.addEventListener('change', () => { const i = parseInt(f.dataset.idx); const k = f.dataset.key; DB.timetable[dS][i][k] = f.value; if (k === 'subjectId') { DB.timetable[dS][i].teacher = getTeachersForSubject(f.value)[0] || ''; renderTimetableSetup(); } saveDB(true); }));
+  c.querySelectorAll('.tt-delete').forEach(b => b.addEventListener('click', () => { DB.timetable[dS].splice(parseInt(b.dataset.idx), 1); saveDB(true); renderTimetableSetup(); }));
+}
+
+
+function renderTimetableSlot(slot, idx) {
+  const t = getTeachersForSubject(slot.subjectId);
+  return `<div class="recent-item" style="flex-direction:column;align-items:stretch;background:var(--card);border:1px solid var(--border);padding:12px;margin-bottom:8px;border-radius:12px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:800;color:var(--primary)">Slot ${idx+1}</span><button class="tt-delete icon-btn" data-idx="${idx}" style="width:28px;height:28px">🗑</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="form-field"><label>Start</label><input type="text" class="tt-field" data-idx="${idx}" data-key="startTime" value="${slot.startTime}"></div>
+      <div class="form-field"><label>End</label><input type="text" class="tt-field" data-idx="${idx}" data-key="endTime" value="${slot.endTime}"></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Subject</label><select class="tt-field" data-idx="${idx}" data-key="subjectId">${DB.subjects.map(s => `<option value="${s.id}" ${s.id===slot.subjectId?'selected':''}>${s.name}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Teacher</label><select class="tt-field" data-idx="${idx}" data-key="teacher">${t.map(x => `<option value="${x}" ${x===slot.teacher?'selected':''}>${x}</option>`).join('')}</select></div>
+      <div class="form-field"><label>Batch</label><select class="tt-field" data-idx="${idx}" data-key="batch"><option value="A" ${slot.batch==='A'?'selected':''}>A</option><option value="B" ${slot.batch==='B'?'selected':''}>B</option><option value="Both" ${slot.batch==='Both'?'selected':''}>Both</option></select></div>
+      <div class="form-field" style="grid-column:1/-1"><label>Type</label><select class="tt-field" data-idx="${idx}" data-key="type"><option value="Theory" ${slot.type==='Theory'?'selected':''}>Theory</option><option value="Practical" ${slot.type==='Practical'?'selected':''}>Practical</option></select></div>
+    </div></div>`;
+}
+
+
+function renderSubjectsSetup() {
+  const c = document.getElementById('setup-subjects');
+  c.innerHTML = `<div class="card"><div class="card-title"><span>Subjects & Teachers</span></div>
+    ${DB.subjects.map(sub => `<div class="recent-item" style="flex-direction:column;align-items:stretch;background:var(--card);border:1px solid var(--border);padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between"><span style="font-weight:800">${sub.name}</span><div><button class="sub-edit" data-id="${sub.id}">✏️</button><button class="sub-delete" data-id="${sub.id}">🗑</button></div></div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${sub.teachers.map(t => `<span style="background:var(--primary-bg);color:var(--primary);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;border:1px solid var(--primary)">${t}<button class="teacher-remove" data-sub="${sub.id}" data-teacher="${t}" style="background:none">✕</button></span>`).join('')}<button class="teacher-add" data-id="${sub.id}" style="background:var(--card-alt);border:1px dashed var(--border);padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700">+ Add</button></div>
+    </div>`).join('')}
+    <button class="add-btn" id="sub-add">+ Add Subject</button></div>`;
+  document.getElementById('sub-add').addEventListener('click', () => { const n = prompt('Subject name:'); if (n) { DB.subjects.push({id:uid(),name:n.trim(),teachers:[]}); saveDB(); renderSubjectsSetup(); } });
+  c.querySelectorAll('.sub-edit').forEach(b => b.addEventListener('click', () => { const s = DB.subjects.find(x => x.id === b.dataset.id); const n = prompt('Edit name:', s.name); if (n) { s.name = n.trim(); saveDB(); renderSubjectsSetup(); } }));
+  c.querySelectorAll('.sub-delete').forEach(b => b.addEventListener('click', () => { if (confirm('Delete subject?')) { DB.subjects = DB.subjects.filter(x => x.id !== b.dataset.id); saveDB(); renderSubjectsSetup(); } }));
+  c.querySelectorAll('.teacher-add').forEach(b => b.addEventListener('click', () => { const s = DB.subjects.find(x => x.id === b.dataset.id); const n = prompt('Teacher name:'); if (n && !s.teachers.includes(n.trim())) { s.teachers.push(n.trim()); saveDB(); renderSubjectsSetup(); } }));
+  c.querySelectorAll('.teacher-remove').forEach(b => b.addEventListener('click', () => { const s = DB.subjects.find(x => x.id === b.dataset.sub); s.teachers = s.teachers.filter(t => t !== b.dataset.teacher); saveDB(); renderSubjectsSetup(); }));
+}
+
+
+function renderStudentsSetup() {
+  const c = document.getElementById('setup-students');
+  c.innerHTML = `<div class="card"><div class="card-title"><span>Students (${DB.students.length})</span></div>
+    ${DB.students.map(s => `<div class="recent-item"><span class="sr-roll">${s.roll}</span><div class="ri-info"><div class="ri-subject">${s.name}</div><div class="ri-details">Batch ${s.batch||'None'}</div></div><div><button class="student-edit" data-roll="${s.roll}">✏️</button><button class="student-delete" data-roll="${s.roll}">🗑</button></div></div>`).join('')}
+    <button class="add-btn" id="student-add">+ Add Student</button></div>`;
+  document.getElementById('student-add').addEventListener('click', () => {
+    const mR = Math.max(...DB.students.map(s => s.roll), 0);
+    const n = prompt('Student name:'); if (n) { const b = prompt('Batch (A, B, None):', 'A'); DB.students.push({roll:mR+1,name:n.trim().toUpperCase(),batch:['A','B','None'].includes(b)?b:'None'}); DB.students.sort((a,b)=>a.roll-b.roll); saveDB(); renderStudentsSetup(); }
+  });
+  c.querySelectorAll('.student-edit').forEach(b => b.addEventListener('click', () => { const s = DB.students.find(x => x.roll === parseInt(b.dataset.roll)); const n = prompt('Edit name:', s.name); if (n) { const b = prompt('Batch (A, B, None):', s.batch||'None'); s.name = n.trim().toUpperCase(); if (['A','B','None'].includes(b)) s.batch = b; saveDB(); renderStudentsSetup(); } }));
+  c.querySelectorAll('.student-delete').forEach(b => b.addEventListener('click', () => { if (confirm('Delete student?')) { DB.students = DB.students.filter(x => x.roll !== parseInt(b.dataset.roll)); saveDB(); renderStudentsSetup(); } }));
+}
+
+
+function renderSettingsSetup() {
+  const c = document.getElementById('setup-settings');
+  c.innerHTML = `<div class="card"><div class="card-title"><span>Settings</span></div>
+    <div class="form-field" style="margin-bottom:12px"><label>Class Name</label><input type="text" id="settings-class-name" value="${DB.settings.className}"></div>
+    <div class="form-field" style="margin-bottom:12px"><label>Default View</label><select id="settings-default-view"><option value="list" ${DB.settings.defaultView==='list'?'selected':''}>List</option><option value="grid" ${DB.settings.defaultView==='grid'?'selected':''}>Grid</option></select></div>
+    <button class="btn-sm btn-primary" id="settings-save" style="width:100%;padding:12px">Save Settings</button></div>
+    <div class="card"><div class="card-title"><span>Data Management</span></div>
+      <button class="btn-sm btn-secondary" id="export-excel" style="width:100%;padding:12px;margin-bottom:8px">Export Excel (CSV)</button>
+      <button class="btn-sm btn-secondary" id="export-json" style="width:100%;padding:12px;margin-bottom:8px">Export Backup (JSON)</button>
+      <button class="btn-sm btn-secondary" id="import-json" style="width:100%;padding:12px;margin-bottom:8px">Import Backup (JSON)</button>
+      <button class="btn-sm btn-secondary" id="recycle-bin" style="width:100%;padding:12px;margin-bottom:8px">Recycle Bin (${DB.recycleBin.length})</button>
+      <button class="btn-sm btn-danger" id="reset-all" style="width:100%;padding:12px">Reset Everything</button>
+    </div>`;
+  document.getElementById('settings-save').addEventListener('click', () => { DB.settings.className = document.getElementById('settings-class-name').value; DB.settings.defaultView = document.getElementById('settings-default-view').value; saveDB(); showToast('✓ Saved', 'success'); });
+  document.getElementById('export-excel').addEventListener('click', exportToExcel);
+  document.getElementById('export-json').addEventListener('click', exportJSON);
+  document.getElementById('import-json').addEventListener('click', importJSON);
+  document.getElementById('recycle-bin').addEventListener('click', showRecycleBin);
+  document.getElementById('reset-all').addEventListener('click', () => { if (confirm('Reset EVERYTHING?')) { localStorage.removeItem(STORAGE_KEY); seedData(); showToast('✓ Reset', 'success'); renderSetup(); } });
+}
+
+
+function exportToExcel() {
+  let csv = "Date,Time,Subject,Teachers,Type,Batch,Topic,Holiday,Present Rolls\n";
+  getAllAttendanceRecords().forEach(r => {
+    const esc = (s) => `"${String(s||'').replace(/"/g, '""')}"`;
+    csv += [esc(r.date), esc(r.time), esc(r.subjectName), esc(getTeachersFromRecord(r).join(', ')), esc(r.type), esc(r.batch), esc(r.topic), esc(r.isHoliday ? r.holidayType : 'No'), esc(r.present.join(', '))].join(',') + "\n";
+  });
+  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'attendance.csv'; a.click(); showToast('✓ Exported', 'success');
+}
+
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cr_backup.json'; a.click(); showToast('✓ Backup exported', 'success');
+}
+
+
+function importJSON() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+  inp.addEventListener('change', (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        if (d.students && d.subjects) {
+          const mode = confirm('OK to Merge\nCancel to Replace');
+          if (mode) {
+            DB.students = [...DB.students, ...d.students.filter(s => !DB.students.find(x => x.roll === s.roll))];
+            DB.subjects = [...DB.subjects, ...d.subjects.filter(s => !DB.subjects.find(x => x.name === s.name))];
+            Object.keys(d.attendance).forEach(date => { if (!DB.attendance[date]) DB.attendance[date] = []; DB.attendance[date].push(...d.attendance[date]); });
+          } else { DB = d; }
+          saveDB(); showToast('✓ Imported', 'success'); renderSetup();
+        } else { showToast('Invalid file', 'error'); }
+      } catch(err) { showToast('Import failed', 'error'); }
+    };
+    r.readAsText(f);
+  });
+  inp.click();
+}
+
+
+function showRecycleBin() {
+  const m = document.getElementById('modal-content');
+  m.innerHTML = `<div class="modal-header"><h2>♻️ Recycle Bin</h2><button class="modal-close" id="modal-close-btn">✕</button></div>
+    ${DB.recycleBin.length === 0 ? '<div class="empty-state"><div class="es-msg">Empty</div></div>' : DB.recycleBin.map(r => `<div class="recent-item"><div class="ri-info"><div class="ri-subject">${r.subjectName}</div><div class="ri-details">${r.date}</div></div><button class="recycle-restore" data-id="${r.id}">Restore</button></div>`).join('')}`;
+  document.getElementById('modal-overlay').classList.add('active');
+  m.querySelectorAll('.recycle-restore').forEach(b => b.addEventListener('click', () => {
+    const i = DB.recycleBin.findIndex(r => r.id === b.dataset.id);
+    if (i > -1) { const [rec] = DB.recycleBin.splice(i, 1); if (!DB.attendance[rec.date]) DB.attendance[rec.date] = []; DB.attendance[rec.date].push(rec); saveDB(); showToast('✓ Restored', 'success'); showRecycleBin(); }
+  }));
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+}
+
+
+// ============================================================
+// GLOBAL SEARCH
+// ============================================================
+function showGlobalSearch() {
+  const m = document.getElementById('modal-content');
+  m.innerHTML = `
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="global-search-input" placeholder="Search students, subjects, dates..." autofocus>
+      </div>
+      <div class="search-results" id="global-search-results">
+        <div class="empty-state"><div class="es-msg">Start typing to search...</div></div>
+      </div>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('active');
+  document.getElementById('global-search-input').addEventListener('input', debounce((e) => {
+    const q = e.target.value.toLowerCase().trim();
+    const resEl = document.getElementById('global-search-results');
+    if (!q) { resEl.innerHTML = '<div class="empty-state"><div class="es-msg">Start typing to search...</div></div>'; return; }
+    
+    const students = DB.students.filter(s => s.name.toLowerCase().includes(q) || String(s.roll).includes(q));
+    const subjects = DB.subjects.filter(s => s.name.toLowerCase().includes(q));
+    const teachers = new Set();
+    DB.subjects.forEach(sub => sub.teachers.forEach(t => { if (t.toLowerCase().includes(q)) teachers.add(t); }));
+    const records = getAllAttendanceRecords().filter(r => {
+      const dD = r.date.split('-').reverse().join('/');
+      return r.subjectName.toLowerCase().includes(q) || r.date.includes(q) || dD.includes(q) || (r.topic && r.topic.toLowerCase().includes(q));
+    }).slice(-10).reverse();
+
+
+    let html = '';
+    if (students.length) {
+      html += `<div class="search-group"><div class="search-group-title">Students</div>${students.map(s => `<div class="search-result-item" data-type="student" data-roll="${s.roll}"><div class="sr-icon">${s.roll}</div><div class="sr-text"><div class="sr-title">${s.name}</div><div class="sr-subtitle">Batch ${s.batch || 'None'}</div></div></div>`).join('')}</div>`;
+    }
+    if (subjects.length) {
+      html += `<div class="search-group"><div class="search-group-title">Subjects</div>${subjects.map(s => `<div class="search-result-item" data-type="subject" data-id="${s.id}"><div class="sr-icon">📚</div><div class="sr-text"><div class="sr-title">${s.name}</div><div class="sr-subtitle">${s.teachers.length} Teachers</div></div></div>`).join('')}</div>`;
+    }
+    if (teachers.size) {
+      html += `<div class="search-group"><div class="search-group-title">Teachers</div>${Array.from(teachers).map(t => `<div class="search-result-item" data-type="teacher" data-name="${t}"><div class="sr-icon">👨‍🏫</div><div class="sr-text"><div class="sr-title">${t}</div></div></div>`).join('')}</div>`;
+    }
+    if (records.length) {
+      html += `<div class="search-group"><div class="search-group-title">Attendance Records</div>${records.map(r => `<div class="search-result-item" data-type="record" data-id="${r.id}"><div class="sr-icon">${r.isHoliday ? '🏛️' : '📅'}</div><div class="sr-text"><div class="sr-title">${r.isHoliday ? r.holidayType : r.subjectName}</div><div class="sr-subtitle">${r.date.split('-').reverse().join('/')} • ${r.time || 'N/A'}</div></div></div>`).join('')}</div>`;
+    }
+    if (!html) html = '<div class="empty-state"><div class="es-msg">No results found</div></div>';
+    resEl.innerHTML = html;
+
+
+    resEl.querySelectorAll('.search-result-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const type = item.dataset.type;
+        if (type === 'student') showStudentProfile(parseInt(item.dataset.roll));
+        else if (type === 'record') { const rec = findRecordById(item.dataset.id); if (rec) { loadRecordIntoForm(rec); closeModal(); navigate('attendance'); } }
+        else if (type === 'subject') { navigate('reports'); document.querySelector('[data-report="subjects"]').click(); closeModal(); }
+      });
+    });
+  }, 200));
+}
+
+
+// ============================================================
+// INIT & EVENTS
+// ============================================================
+function setupEventListeners() {
+  document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => navigate(b.dataset.nav)));
+  document.getElementById('theme-toggle').addEventListener('click', () => {
+    const c = document.documentElement.dataset.theme; const n = c === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = n; DB.settings.theme = n; saveDB(true);
+    document.getElementById('theme-icon').innerHTML = n === 'dark' ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>' : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  });
+  document.getElementById('global-search-btn').addEventListener('click', showGlobalSearch);
+  
+  document.getElementById('att-date').addEventListener('change', (e) => { saveCurrentAttendance(true); AppState.attendance.date = e.target.value; AppState.attendance.recordId = null; clearAttendanceForm(); renderExistingRecords(); });
+  document.getElementById('new-record-btn').addEventListener('click', () => { clearAttendanceForm(); showToast('Ready for new record', 'success'); });
+  document.getElementById('att-is-holiday').addEventListener('change', toggleHolidayUI);
+  document.getElementById('att-holiday-type').addEventListener('change', (e) => { AppState.attendance.holidayType = e.target.value; AppState.attendance.subjectName = e.target.value; saveCurrentAttendance(true); });
+  document.getElementById('att-subject').addEventListener('change', (e) => { AppState.attendance.subjectId = e.target.value; AppState.attendance.subjectName = getSubjectName(e.target.value); const t = getTeachersForSubject(e.target.value); if (!AppState.attendance.teachers.some(x => t.includes(x)) && t.length > 0) AppState.attendance.teachers = [t[0]]; renderTeacherChips(); saveCurrentAttendance(true); });
+  document.getElementById('att-batch').addEventListener('change', (e) => { AppState.attendance.batch = e.target.value; const v = getStudentsForBatch(e.target.value).map(s => s.roll); AppState.attendance.present = AppState.attendance.present.filter(r => v.includes(r)); renderStudents(); updateCounts(); saveCurrentAttendance(true); });
+  document.getElementById('att-type').addEventListener('change', (e) => { AppState.attendance.type = e.target.value; saveCurrentAttendance(true); });
+  document.getElementById('att-time').addEventListener('input', (e) => { AppState.attendance.time = e.target.value; saveCurrentAttendance(true); });
+  document.getElementById('att-topic').addEventListener('input', (e) => { AppState.attendance.topic = e.target.value; silentSave(); });
+  document.getElementById('att-remarks').addEventListener('input', (e) => { AppState.attendance.remarks = e.target.value; silentSave(); });
+
+
+  document.querySelectorAll('.mode-toggle button').forEach(b => b.addEventListener('click', () => { const m = b.dataset.mode; if (m === AppState.attendance.mode) return; AppState.attendance.mode = m; document.querySelectorAll('.mode-toggle button').forEach(x => x.classList.remove('active')); b.classList.add('active'); renderStudents(); }));
+  document.getElementById('student-container').addEventListener('click', (e) => { const i = e.target.closest('.att-item'); if (i) togglePresent(i.dataset.roll); });
+  document.getElementById('att-search').addEventListener('input', debounce((e) => { const q = e.target.value.toLowerCase().trim(); document.querySelectorAll('.att-item').forEach(i => { if (!q || i.dataset.search.includes(q)) i.style.display = ''; else i.style.display = 'none'; }); }, 150));
+
+
+  document.getElementById('mark-all-btn').addEventListener('click', markAllPresent);
+  document.getElementById('reset-btn').addEventListener('click', resetAttendance);
+  document.getElementById('copy-btn').addEventListener('click', showCopyModal);
+  document.getElementById('delete-record-btn').addEventListener('click', deleteCurrentRecord);
+
+
+  document.querySelectorAll('.report-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.report-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); document.querySelectorAll('.report-panel').forEach(p => p.classList.remove('active')); document.getElementById('report-' + t.dataset.report).classList.add('active'); }));
+  document.querySelectorAll('.setup-tab').forEach(t => t.addEventListener('click', () => { document.querySelectorAll('.setup-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active')); document.getElementById('setup-' + t.dataset.setup).classList.add('active'); AppState.setupTab = t.dataset.setup; renderSetup(); }));
+  
+  document.getElementById('modal-overlay').addEventListener('click', (e) => { if (e.target === document.getElementById('modal-overlay')) closeModal(); });
+}
+
+
+function init() {
+  loadDB();
+  document.documentElement.dataset.theme = DB.settings.theme;
+  document.getElementById('theme-icon').innerHTML = DB.settings.theme === 'dark' ? '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>' : '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+  AppState.attendance.mode = DB.settings.defaultView || 'list';
+  const now = new Date(); AppState.currentDate = now; AppState.attendance.date = formatDateISO(now);
+  setupEventListeners(); renderHome();
+  if (!sessionStorage.getItem('welcome_shown')) { setTimeout(() => showToast('Welcome to CR Attendance Pro 2.0!', 'success'), 500); sessionStorage.setItem('welcome_shown', '1'); }
+}
+
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>
